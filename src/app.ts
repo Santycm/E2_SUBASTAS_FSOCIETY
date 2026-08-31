@@ -22,7 +22,7 @@ app.use('/api/v1/payments', paymentsRoutes);
 
 // Respuesta para rutas no encontradas
 app.use((_req, res) => {
-  res.status(404).json({ message: 'Not found' });
+  res.status(404).json({ message: 'Route not found' });
 });
 
 app.listen(PORT, () => {
