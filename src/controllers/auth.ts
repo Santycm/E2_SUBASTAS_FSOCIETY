@@ -5,7 +5,7 @@ export const register = (req: Request, res: Response): void => {
   const { name, email, password } = req.body;
 
   const user = {
-    id: `user-${users.length + 1}`,
+    id: `user-${(users.length + 1).toString().padStart(3, '0')}`,
     name,
     email,
     password,
