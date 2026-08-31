@@ -20,7 +20,7 @@ app.use('/api/v1/auctions', auctionsRoutes);
 app.use('/api/v1/orders', ordersRoutes);
 app.use('/api/v1/payments', paymentsRoutes);
 
-// Respuesta para rutas no encontradas
+// Handle 404 errors for undefined routes
 app.use((_req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
