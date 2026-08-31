@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { auctions } from '../data/auctions';
 
 export const getAuctions = (req: Request, res: Response): void => {
+  // Extract query parameters for filtering and pagination
   const {
     categoryId,
     status,
@@ -9,9 +10,11 @@ export const getAuctions = (req: Request, res: Response): void => {
     limit = '10',
   } = req.query;
 
+  // Convert page and limit to numbers
   const pageNumber = Number(page);
   const limitNumber = Number(limit);
 
+  // Filter the auctions based on the query parameters
   let filteredAuctions = [...auctions];
 
   if (typeof categoryId === 'string') {
@@ -26,6 +29,7 @@ export const getAuctions = (req: Request, res: Response): void => {
     );
   }
 
+  // Implement pagination
   const total = filteredAuctions.length;
   const totalPages = Math.ceil(total / limitNumber);
   const startIndex = (pageNumber - 1) * limitNumber;
@@ -51,7 +55,7 @@ export const createAuction = (
   req: Request,
   res: Response,
 ): void => {
-
+  // Extract auction details from the request body
   const {
     title,
     description,
@@ -61,6 +65,7 @@ export const createAuction = (
     closesAt,
   } = req.body;
 
+  // Build the new auction object
   const auction = {
     id: `auction-${(auctions.length + 1).toString().padStart(3, '0')}`,
     title,
@@ -75,6 +80,7 @@ export const createAuction = (
     createdAt: new Date().toISOString(),
   };
 
+  // Add the new auction to the auctions array
   auctions.push(auction);
 
   res.status(201).json({
