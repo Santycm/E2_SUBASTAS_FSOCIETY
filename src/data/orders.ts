@@ -1,4 +1,14 @@
-export const orders = [
+export interface Order {
+  id: string;
+  auctionId: string;
+  buyerId: string;
+  amount: number;
+  status: 'PENDING' | 'PAID' | 'EXPIRED';
+  createdAt: string;
+  expiresAt: string;
+}
+
+export const orders: Order[] = [
   {
     id: 'order-001',
     auctionId: 'auction-003',
