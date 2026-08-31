@@ -2,19 +2,18 @@ import { Router } from "express";
 import {
   getAuctions,
   createAuction,
-  getAuction,
+  getAuctionById,
   cancelAuction,
 } from "../controllers/auctions";
-
-import { createBid, getBids } from "../controllers/bids";
+import { createBid, getAuctionBids } from "../controllers/bids";
 
 const router: Router = Router();
 
 router.get("/", getAuctions);
 router.post("/", createAuction);
-router.get("/:id", getAuction);
+router.get("/:id", getAuctionById);
 router.post("/:id/cancel", cancelAuction);
 router.post("/:id/bids", createBid);
-router.get("/:id/bids", getBids);
+router.get("/:id/bids", getAuctionBids);
 
 export default router;
