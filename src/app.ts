@@ -20,6 +20,11 @@ app.use('/api/v1/auctions', auctionsRoutes);
 app.use('/api/v1/orders', ordersRoutes);
 app.use('/api/v1/payments', paymentsRoutes);
 
+// Respuesta para rutas no encontradas
+app.use((_req, res) => {
+  res.status(404).json({ message: 'Not found' });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
