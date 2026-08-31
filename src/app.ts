@@ -1,14 +1,24 @@
 import express, { Application } from 'express';
 
-const app:Application = express();
+import authRoutes from './routes/auth';
+import usersRoutes from './routes/users';
+import categoriesRoutes from './routes/categories';
+import auctionsRoutes from './routes/auctions';
+import ordersRoutes from './routes/orders';
+import paymentsRoutes from './routes/payments';
 
-const PORT = 3000;
+const app: Application = express();
 
-app.get('/', (_req, res) => {
-  res.json({
-    message: 'E2 Subastas FSOCIETY API funcionando correctamente',
-  });
-});
+const PORT:Number = 3000;
+
+app.use(express.json());
+
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/users', usersRoutes);
+app.use('/api/v1/categories', categoriesRoutes);
+app.use('/api/v1/auctions', auctionsRoutes);
+app.use('/api/v1/orders', ordersRoutes);
+app.use('/api/v1/payments', paymentsRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
