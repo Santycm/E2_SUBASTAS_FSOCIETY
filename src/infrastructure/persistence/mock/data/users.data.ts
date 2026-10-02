@@ -1,4 +1,6 @@
-export const users = [
+import { User } from '../../../../domain/entities/user';
+
+export const usersData: User[] = [
   {
     id: 'user-001',
     name: 'Santiago Castaño',
