@@ -1,30 +1,27 @@
 import express, { Application } from 'express';
 
-import authRoutes from './routes/auth';
-import usersRoutes from './routes/users';
-import categoriesRoutes from './routes/categories';
-import auctionsRoutes from './routes/auctions';
-import ordersRoutes from './routes/orders';
-import paymentsRoutes from './routes/payments';
+import authRoutes from './infrastructure/http/routes/auth.routes';
+import categoriesRoutes from './infrastructure/http/routes/category.routes';
+import auctionsRoutes from './infrastructure/http/routes/auction.routes';
+import ordersRoutes from './infrastructure/http/routes/order.routes';
+import usersRoutes from './infrastructure/http/routes/user.routes';
+import paymentsRoutes from './infrastructure/http/routes/payment.routes';
 
 const app: Application = express();
-
-const PORT:Number = 3000;
 
 app.use(express.json());
 
 app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/users', usersRoutes);
 app.use('/api/v1/categories', categoriesRoutes);
 app.use('/api/v1/auctions', auctionsRoutes);
 app.use('/api/v1/orders', ordersRoutes);
+app.use('/api/v1/users', usersRoutes);
 app.use('/api/v1/payments', paymentsRoutes);
 
-// Handle 404 errors for undefined routes
 app.use((_req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+  res.status(404).json({
+    message: 'Route not found',
+  });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+export default app;

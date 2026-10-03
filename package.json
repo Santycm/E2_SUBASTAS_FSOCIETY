@@ -4,13 +4,14 @@
   "description": "Plataforma web para la gestión de subastas públicas en línea, en la cual los usuarios registrados pueden publicar artículos para la venta y participar como postores en subastas realizadas durante un periodo determinado.",
   "scripts": {
     "build": "tsc",
-    "dev": "tsx watch src/app.ts",
-    "app": "node dist/app.js"
+    "dev": "tsx watch src/index.ts",
+    "app": "node dist/index.js"
   },
   "author": "Santycm",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "dotenv": "^18.0.5",
     "express": "^5.2.1"
   },
   "devDependencies": {
