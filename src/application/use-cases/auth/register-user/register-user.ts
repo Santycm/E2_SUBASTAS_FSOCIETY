@@ -1,31 +1,30 @@
-import { User } from '../../../../domain/entities/user';
 import { UserRepository } from '../../../../domain/ports/user.repository';
-import { RegisterUserDto } from './dto/register-user.dto';
+import { PasswordHasher } from '../../../../domain/ports/password-hasher';
 
-export interface RegisterUserResult {
-  id: string;
-  name: string;
-  email: string;
-}
+import { RegisterUserDto } from './dto/register-user.dto';
 
 export class RegisterUserUseCase {
   constructor(
     private readonly userRepository: UserRepository,
+    private readonly passwordHasher: PasswordHasher,
   ) {}
 
-  async execute(
-    dto: RegisterUserDto,
-  ): Promise<RegisterUserResult> {
-    const users = await this.userRepository.findAll();
+  async execute(input: RegisterUserDto) {
+    const existingUser =
+      await this.userRepository.findByEmail(input.email);
 
-    const user: User = {
-      id: `user-${String(users.length + 1).padStart(3, '0')}`,
-      name: dto.name,
-      email: dto.email,
-      password: dto.password,
-    };
+    if (existingUser) {
+      throw new Error('USER_ALREADY_EXISTS');
+    }
 
-    await this.userRepository.save(user);
+    const hashedPassword =
+      await this.passwordHasher.hash(input.password);
+
+    const user = await this.userRepository.save({
+      name: input.name,
+      email: input.email,
+      password: hashedPassword,
+    });
 
     return {
       id: user.id,

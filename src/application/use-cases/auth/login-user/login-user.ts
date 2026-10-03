@@ -1,34 +1,44 @@
 import { UserRepository } from '../../../../domain/ports/user.repository';
-import { LoginUserDto } from './dto/login-user.dto';
+import { PasswordHasher } from '../../../../domain/ports/password-hasher';
+import { TokenService } from '../../../../domain/ports/token-service';
 
-export interface LoginUserResult {
-  id: string;
-  name: string;
-  email: string;
-  token: string;
-}
+import { LoginUserDto } from './dto/login-user.dto';
 
 export class LoginUserUseCase {
   constructor(
     private readonly userRepository: UserRepository,
+    private readonly passwordHasher: PasswordHasher,
+    private readonly tokenService: TokenService,
   ) {}
 
-  async execute(
-    dto: LoginUserDto,
-  ): Promise<LoginUserResult | null> {
+  async execute(input: LoginUserDto) {
     const user = await this.userRepository.findByEmail(
-      dto.email,
+      input.email,
     );
 
-    if (!user || user.password !== dto.password) {
+    if (!user) {
       return null;
     }
+
+    const passwordMatches =
+      await this.passwordHasher.compare(
+        input.password,
+        user.password,
+      );
+
+    if (!passwordMatches) {
+      return null;
+    }
+
+    const token = this.tokenService.generate({
+      userId: user.id,
+    });
 
     return {
       id: user.id,
       name: user.name,
       email: user.email,
-      token: 'fake-jwt-token',
+      token,
     };
   }
 }

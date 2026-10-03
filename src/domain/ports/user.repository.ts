@@ -1,5 +1,11 @@
 import { User } from '../entities/user';
 
+export interface CreateUserData {
+  name: string;
+  email: string;
+  password: string;
+}
+
 export interface UserRepository {
   findAll(): Promise<User[]>;
 
@@ -7,5 +13,5 @@ export interface UserRepository {
 
   findByEmail(email: string): Promise<User | null>;
 
-  save(user: User): Promise<User>;
+  save(user: CreateUserData): Promise<User>;
 }

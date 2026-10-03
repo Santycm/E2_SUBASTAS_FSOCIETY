@@ -7,6 +7,9 @@ import ordersRoutes from './infrastructure/http/routes/order.routes';
 import usersRoutes from './infrastructure/http/routes/user.routes';
 import paymentsRoutes from './infrastructure/http/routes/payment.routes';
 
+import { errorMiddleware } from './infrastructure/http/middlewares/error.middleware';
+import { notFoundMiddleware } from './infrastructure/http/middlewares/not-found.middleware';
+
 const app: Application = express();
 
 app.use(express.json());
@@ -18,10 +21,7 @@ app.use('/api/v1/orders', ordersRoutes);
 app.use('/api/v1/users', usersRoutes);
 app.use('/api/v1/payments', paymentsRoutes);
 
-app.use((_req, res) => {
-  res.status(404).json({
-    message: 'Route not found',
-  });
-});
+app.use(notFoundMiddleware);
+app.use(errorMiddleware);
 
 export default app;
