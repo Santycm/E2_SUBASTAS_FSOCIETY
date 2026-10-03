@@ -1,5 +1,9 @@
 import { User } from '../../../../domain/entities/user';
-import { UserRepository } from '../../../../domain/ports/user.repository';
+import {
+  CreateUserData,
+  UserRepository,
+} from '../../../../domain/ports/user.repository';
+
 import { UserModel } from '../models/user.model';
 
 export class MongooseUserRepository implements UserRepository {
@@ -20,7 +24,9 @@ export class MongooseUserRepository implements UserRepository {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    const user = await UserModel.findOne({ email }).lean();
+    const user = await UserModel.findOne({
+      email,
+    }).lean();
 
     if (!user) {
       return null;
@@ -29,12 +35,11 @@ export class MongooseUserRepository implements UserRepository {
     return this.toDomain(user);
   }
 
-  async save(user: User): Promise<User> {
+  async save(userData: CreateUserData): Promise<User> {
     const createdUser = await UserModel.create({
-      _id: user.id,
-      name: user.name,
-      email: user.email,
-      password: user.password,
+      name: userData.name,
+      email: userData.email,
+      password: userData.password,
     });
 
     return this.toDomain(createdUser.toObject());
