@@ -22,9 +22,7 @@ export class AuthController {
 
         return;
       }
-
-      console.error("Error in register controller:", error);
-
+      
       res.status(500).json({
         message: "INTERNAL_SERVER_ERROR",
       });

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 
+import { authMiddleware } from '../middlewares/auth.middleware';
 import { CategoriesController } from '../controllers/category.controller';
 
 import { GetCategoriesUseCase } from '../../../application/use-cases/categories/get-categories/get-categories';
@@ -24,7 +25,7 @@ const controller = new CategoriesController(
   getCategoryByIdUseCase,
 );
 
-router.get('/', controller.getCategories);
-router.get('/:id', controller.getCategoryById);
+router.get('/', authMiddleware, controller.getCategories);
+router.get('/:id', authMiddleware, controller.getCategoryById);
 
 export default router;
