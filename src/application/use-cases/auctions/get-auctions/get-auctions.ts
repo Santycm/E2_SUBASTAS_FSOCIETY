@@ -21,23 +21,21 @@ export class GetAuctionsUseCase {
     const page = dto.page ?? 1;
     const limit = dto.limit ?? 10;
 
-    const auctions = await this.auctionRepository.findAll({
+    const result = await this.auctionRepository.findAll({
       categoryId: dto.categoryId,
       status: dto.status,
+      page,
+      limit,
     });
 
-    const total = auctions.length;
-    const totalPages = Math.ceil(total / limit);
-
-    const startIndex = (page - 1) * limit;
-    const data = auctions.slice(startIndex, startIndex + limit);
+    const totalPages = Math.ceil(result.total / limit);
 
     return {
-      data,
+      data: result.data,
       pagination: {
         page,
         limit,
-        total,
+        total: result.total,
         totalPages,
       },
     };

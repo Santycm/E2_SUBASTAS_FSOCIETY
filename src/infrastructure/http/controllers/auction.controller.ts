@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 
+import { AuctionStatus } from '../../../domain/entities/auction';
+
 import { GetAuctionsUseCase } from '../../../application/use-cases/auctions/get-auctions/get-auctions';
 import { CreateAuctionUseCase } from '../../../application/use-cases/auctions/create-auction/create-auction';
 import { GetAuctionByIdUseCase } from '../../../application/use-cases/auctions/get-auction-by-id/get-auction-by-id';
@@ -13,7 +15,10 @@ export class AuctionsController {
     private readonly cancelAuctionUseCase: CancelAuctionUseCase,
   ) {}
 
-  getAuctions = async (req: Request, res: Response): Promise<void> => {
+  getAuctions = async (
+    req: Request,
+    res: Response,
+  ): Promise<void> => {
     const result = await this.getAuctionsUseCase.execute({
       categoryId:
         typeof req.query.categoryId === 'string'
@@ -21,7 +26,7 @@ export class AuctionsController {
           : undefined,
       status:
         typeof req.query.status === 'string'
-          ? req.query.status
+          ? req.query.status as AuctionStatus
           : undefined,
       page:
         typeof req.query.page === 'string'
@@ -44,6 +49,7 @@ export class AuctionsController {
       title: req.body.title,
       description: req.body.description,
       categoryId: req.body.categoryId,
+      sellerId: req.user!.id,
       basePrice: Number(req.body.basePrice),
       minimumIncrement: Number(req.body.minimumIncrement),
       closesAt: req.body.closesAt,

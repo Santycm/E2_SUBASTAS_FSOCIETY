@@ -1,55 +1,75 @@
-import { AuctionRepository } from '../../../../domain/ports/auction.repository';
 import { Auction } from '../../../../domain/entities/auction';
-import { auctionsData } from '../data/auctions.data';
+import {
+  AuctionRepository,
+  CreateAuctionData,
+  FindAuctionsFilters,
+  FindAuctionsResult,
+} from '../../../../domain/ports/auction.repository';
 
 export class MockAuctionRepository implements AuctionRepository {
-  async findAll(filters?: {
-    categoryId?: string;
-    status?: string;
-  }): Promise<Auction[]> {
-    let result = [...auctionsData];
+  private auctions: Auction[] = [];
 
-    if (filters?.categoryId) {
-      result = result.filter(
-        auction => auction.categoryId === filters.categoryId,
-      );
-    }
+  async findAll(
+    filters: FindAuctionsFilters,
+  ): Promise<FindAuctionsResult> {
+    const filteredAuctions = this.auctions.filter((auction) => {
+      const matchesCategory =
+        !filters.categoryId ||
+        auction.categoryId === filters.categoryId;
 
-    if (filters?.status) {
-      result = result.filter(
-        auction => auction.status === filters.status,
-      );
-    }
+      const matchesStatus =
+        !filters.status ||
+        auction.status === filters.status;
 
-    return result;
+      return matchesCategory && matchesStatus;
+    });
+
+    const total = filteredAuctions.length;
+
+    const skip = (filters.page - 1) * filters.limit;
+
+    const data = filteredAuctions.slice(
+      skip,
+      skip + filters.limit,
+    );
+
+    return {
+      data,
+      total,
+    };
   }
 
   async findById(id: string): Promise<Auction | null> {
-    return auctionsData.find(auction => auction.id === id) ?? null;
+    return this.auctions.find((auction) => auction.id === id) ?? null;
   }
 
   async findBySellerId(sellerId: string): Promise<Auction[]> {
-    return auctionsData.filter(
-      auction => auction.sellerId === sellerId,
+    return this.auctions.filter(
+      (auction) => auction.sellerId === sellerId,
     );
   }
 
-  async save(auction: Auction): Promise<Auction> {
-    auctionsData.push(auction);
+  async save(data: CreateAuctionData): Promise<Auction> {
+    const auction: Auction = {
+      id: `mock-${String(this.auctions.length + 1).padStart(3, '0')}`,
+      ...data,
+    };
+
+    this.auctions.push(auction);
 
     return auction;
   }
 
   async update(auction: Auction): Promise<Auction> {
-    const index = auctionsData.findIndex(
-      item => item.id === auction.id,
+    const index = this.auctions.findIndex(
+      (currentAuction) => currentAuction.id === auction.id,
     );
 
     if (index === -1) {
-      throw new Error('Auction not found');
+      throw new Error('AUCTION_NOT_FOUND');
     }
 
-    auctionsData[index] = auction;
+    this.auctions[index] = auction;
 
     return auction;
   }
