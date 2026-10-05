@@ -81,7 +81,11 @@ router.post(
 
 router.get('/:id', auctionsController.getAuctionById);
 
-router.post('/:id/cancel', auctionsController.cancelAuction);
+router.patch(
+  '/:id/cancel',
+  authMiddleware,
+  auctionsController.cancelAuction,
+);
 
 router.post('/:id/bids', bidsController.createBid);
 router.get('/:id/bids', bidsController.getAuctionBids);

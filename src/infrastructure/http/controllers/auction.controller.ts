@@ -1,11 +1,11 @@
-import { Request, Response } from 'express';
+import { Request, Response } from "express";
 
-import { AuctionStatus } from '../../../domain/entities/auction';
+import { AuctionStatus } from "../../../domain/entities/auction";
 
-import { GetAuctionsUseCase } from '../../../application/use-cases/auctions/get-auctions/get-auctions';
-import { CreateAuctionUseCase } from '../../../application/use-cases/auctions/create-auction/create-auction';
-import { GetAuctionByIdUseCase } from '../../../application/use-cases/auctions/get-auction-by-id/get-auction-by-id';
-import { CancelAuctionUseCase } from '../../../application/use-cases/auctions/cancel-auction/cancel-auction';
+import { GetAuctionsUseCase } from "../../../application/use-cases/auctions/get-auctions/get-auctions";
+import { CreateAuctionUseCase } from "../../../application/use-cases/auctions/create-auction/create-auction";
+import { GetAuctionByIdUseCase } from "../../../application/use-cases/auctions/get-auction-by-id/get-auction-by-id";
+import { CancelAuctionUseCase } from "../../../application/use-cases/auctions/cancel-auction/cancel-auction";
 
 export class AuctionsController {
   constructor(
@@ -15,25 +15,20 @@ export class AuctionsController {
     private readonly cancelAuctionUseCase: CancelAuctionUseCase,
   ) {}
 
-  getAuctions = async (
-    req: Request,
-    res: Response,
-  ): Promise<void> => {
+  getAuctions = async (req: Request, res: Response): Promise<void> => {
     const result = await this.getAuctionsUseCase.execute({
       categoryId:
-        typeof req.query.categoryId === 'string'
+        typeof req.query.categoryId === "string"
           ? req.query.categoryId
           : undefined,
       status:
-        typeof req.query.status === 'string'
-          ? req.query.status as AuctionStatus
+        typeof req.query.status === "string"
+          ? (req.query.status as AuctionStatus)
           : undefined,
       page:
-        typeof req.query.page === 'string'
-          ? Number(req.query.page)
-          : undefined,
+        typeof req.query.page === "string" ? Number(req.query.page) : undefined,
       limit:
-        typeof req.query.limit === 'string'
+        typeof req.query.limit === "string"
           ? Number(req.query.limit)
           : undefined,
     });
@@ -41,10 +36,7 @@ export class AuctionsController {
     res.json(result);
   };
 
-  createAuction = async (
-    req: Request,
-    res: Response,
-  ): Promise<void> => {
+  createAuction = async (req: Request, res: Response): Promise<void> => {
     const auction = await this.createAuctionUseCase.execute({
       title: req.body.title,
       description: req.body.description,
@@ -58,17 +50,14 @@ export class AuctionsController {
     res.status(201).json(auction);
   };
 
-  getAuctionById = async (
-    req: Request,
-    res: Response,
-  ): Promise<void> => {
+  getAuctionById = async (req: Request, res: Response): Promise<void> => {
     const auction = await this.getAuctionByIdUseCase.execute(
       req.params.id.toString(),
     );
 
     if (!auction) {
       res.status(404).json({
-        message: 'AUCTION_NOT_FOUND',
+        message: "AUCTION_NOT_FOUND",
       });
 
       return;
@@ -77,17 +66,15 @@ export class AuctionsController {
     res.json(auction);
   };
 
-  cancelAuction = async (
-    req: Request,
-    res: Response,
-  ): Promise<void> => {
+  cancelAuction = async (req: Request, res: Response): Promise<void> => {
     const auction = await this.cancelAuctionUseCase.execute(
       req.params.id.toString(),
+      req.user!.id,
     );
 
     if (!auction) {
       res.status(404).json({
-        message: 'AUCTION_NOT_FOUND',
+        message: "AUCTION_NOT_FOUND",
       });
 
       return;

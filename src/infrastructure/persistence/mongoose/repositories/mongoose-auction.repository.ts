@@ -1,25 +1,20 @@
-import { Types } from 'mongoose';
+import { Types } from "mongoose";
 
-import { Auction } from '../../../../domain/entities/auction';
+import { Auction } from "../../../../domain/entities/auction";
 import {
   AuctionRepository,
   CreateAuctionData,
   FindAuctionsFilters,
   FindAuctionsResult,
-} from '../../../../domain/ports/auction.repository';
+} from "../../../../domain/ports/auction.repository";
 
-import {
-  AuctionDocument,
-  AuctionModel,
-} from '../models/auction.model';
+import { AuctionDocument, AuctionModel } from "../models/auction.model";
 
 export class MongooseAuctionRepository implements AuctionRepository {
-  async findAll(
-    filters: FindAuctionsFilters,
-  ): Promise<FindAuctionsResult> {
+  async findAll(filters: FindAuctionsFilters): Promise<FindAuctionsResult> {
     const query: {
       categoryId?: string;
-      status?: Auction['status'];
+      status?: Auction["status"];
     } = {};
 
     if (filters.categoryId) {
@@ -78,52 +73,45 @@ export class MongooseAuctionRepository implements AuctionRepository {
     return this.toDomain(auction.toObject());
   }
 
-  async update(auction: Auction): Promise<Auction> {
-    if (!Types.ObjectId.isValid(auction.id)) {
-      throw new Error('INVALID_AUCTION_ID');
+  async updateStatus(id: string, status: Auction["status"]): Promise<Auction> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new Error("INVALID_AUCTION_ID");
     }
 
     const updatedAuction = await AuctionModel.findByIdAndUpdate(
-      auction.id,
+      id,
       {
-        title: auction.title,
-        description: auction.description,
-        categoryId: auction.categoryId,
-        sellerId: auction.sellerId,
-        basePrice: auction.basePrice,
-        minimumIncrement: auction.minimumIncrement,
-        currentBid: auction.currentBid,
-        status: auction.status,
-        closesAt: auction.closesAt,
-        createdAt: auction.createdAt,
+        status,
       },
       {
-        new: true,
+        returnDocument: "after",
         runValidators: true,
       },
     ).lean();
 
     if (!updatedAuction) {
-      throw new Error('AUCTION_NOT_FOUND');
+      throw new Error("AUCTION_NOT_FOUND");
     }
 
     return this.toDomain(updatedAuction);
   }
 
   private toDomain(
-    auction: AuctionDocument | {
-      _id: Types.ObjectId;
-      title: string;
-      description: string;
-      categoryId: string;
-      sellerId: string;
-      basePrice: number;
-      minimumIncrement: number;
-      currentBid: number | null;
-      status: Auction['status'];
-      closesAt: Date;
-      createdAt: Date;
-    },
+    auction:
+      | AuctionDocument
+      | {
+          _id: Types.ObjectId;
+          title: string;
+          description: string;
+          categoryId: string;
+          sellerId: string;
+          basePrice: number;
+          minimumIncrement: number;
+          currentBid: number | null;
+          status: Auction["status"];
+          closesAt: Date;
+          createdAt: Date;
+        },
   ): Auction {
     return {
       id: auction._id.toString(),

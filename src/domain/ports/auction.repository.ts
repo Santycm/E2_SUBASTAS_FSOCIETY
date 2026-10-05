@@ -1,4 +1,4 @@
-import { Auction } from '../entities/auction';
+import { Auction } from "../entities/auction";
 
 export interface CreateAuctionData {
   title: string;
@@ -8,14 +8,14 @@ export interface CreateAuctionData {
   basePrice: number;
   minimumIncrement: number;
   currentBid: number | null;
-  status: Auction['status'];
+  status: Auction["status"];
   closesAt: Date;
   createdAt: Date;
 }
 
 export interface FindAuctionsFilters {
   categoryId?: string;
-  status?: Auction['status'];
+  status?: Auction["status"];
   page: number;
   limit: number;
 }
@@ -26,9 +26,7 @@ export interface FindAuctionsResult {
 }
 
 export interface AuctionRepository {
-  findAll(
-    filters: FindAuctionsFilters,
-  ): Promise<FindAuctionsResult>;
+  findAll(filters: FindAuctionsFilters): Promise<FindAuctionsResult>;
 
   findById(id: string): Promise<Auction | null>;
 
@@ -36,5 +34,5 @@ export interface AuctionRepository {
 
   save(data: CreateAuctionData): Promise<Auction>;
 
-  update(auction: Auction): Promise<Auction>;
+  updateStatus(id: string, status: Auction["status"]): Promise<Auction>;
 }

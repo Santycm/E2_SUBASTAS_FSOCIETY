@@ -60,17 +60,17 @@ export class MockAuctionRepository implements AuctionRepository {
     return auction;
   }
 
-  async update(auction: Auction): Promise<Auction> {
+  async updateStatus(id: string, status: Auction["status"]): Promise<Auction> {
     const index = this.auctions.findIndex(
-      (currentAuction) => currentAuction.id === auction.id,
+      (currentAuction) => currentAuction.id === id,
     );
 
     if (index === -1) {
       throw new Error('AUCTION_NOT_FOUND');
     }
 
-    this.auctions[index] = auction;
+    this.auctions[index].status = status;
 
-    return auction;
+    return this.auctions[index];
   }
 }
