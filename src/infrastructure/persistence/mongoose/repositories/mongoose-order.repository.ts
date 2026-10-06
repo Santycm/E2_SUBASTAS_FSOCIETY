@@ -1,16 +1,12 @@
-import { Types } from 'mongoose';
+import { Types } from "mongoose";
 
-import { Order } from '../../../../domain/entities/order';
-import {
-  OrderRepository,
-} from '../../../../domain/ports/order.repository';
-import { OrderModel } from '../models/order.model';
+import { Order } from "../../../../domain/entities/order";
+import { CreateOrderData, OrderRepository } from "../../../../domain/ports/order.repository";
+import { OrderModel } from "../models/order.model";
 
 export class MongooseOrderRepository implements OrderRepository {
   async findAll(): Promise<Order[]> {
-    const orders = await OrderModel.find()
-      .sort({ createdAt: -1 })
-      .lean();
+    const orders = await OrderModel.find().sort({ createdAt: -1 }).lean();
 
     return orders.map((order) => this.toDomain(order));
   }
@@ -29,9 +25,7 @@ export class MongooseOrderRepository implements OrderRepository {
     return this.toDomain(order);
   }
 
-  async findByAuctionId(
-    auctionId: string,
-  ): Promise<Order | null> {
+  async findByAuctionId(auctionId: string): Promise<Order | null> {
     const order = await OrderModel.findOne({
       auctionId,
     }).lean();
@@ -53,22 +47,15 @@ export class MongooseOrderRepository implements OrderRepository {
     return orders.map((order) => this.toDomain(order));
   }
 
-  async save(order: Order): Promise<Order> {
-    const savedOrder = await OrderModel.create({
-      auctionId: order.auctionId,
-      buyerId: order.buyerId,
-      amount: order.amount,
-      status: order.status,
-      createdAt: order.createdAt,
-      expiresAt: order.expiresAt,
-    });
+  async save(data: CreateOrderData): Promise<Order> {
+    const savedOrder = await OrderModel.create(data);
 
     return this.toDomain(savedOrder.toObject());
   }
 
   async update(order: Order): Promise<Order> {
     if (!Types.ObjectId.isValid(order.id)) {
-      throw new Error('INVALID_ORDER_ID');
+      throw new Error("INVALID_ORDER_ID");
     }
 
     const updatedOrder = await OrderModel.findByIdAndUpdate(
@@ -82,13 +69,13 @@ export class MongooseOrderRepository implements OrderRepository {
         expiresAt: order.expiresAt,
       },
       {
-        returnDocument: 'after',
+        returnDocument: "after",
         runValidators: true,
       },
     ).lean();
 
     if (!updatedOrder) {
-      throw new Error('ORDER_NOT_FOUND');
+      throw new Error("ORDER_NOT_FOUND");
     }
 
     return this.toDomain(updatedOrder);
@@ -99,7 +86,7 @@ export class MongooseOrderRepository implements OrderRepository {
     auctionId: string;
     buyerId: string;
     amount: number;
-    status: Order['status'];
+    status: Order["status"];
     createdAt: Date;
     expiresAt: Date;
   }): Order {

@@ -1,13 +1,13 @@
 import { Router } from 'express';
 
-import { MockOrderRepository } from '../../persistence/mock/repositories/mock-order.repository';
+import { MongooseOrderRepository } from '../../persistence/mongoose/repositories/mongoose-order.repository';
 import { GetOrdersUseCase } from '../../../application/use-cases/orders/get-orders/get-orders';
 import { GetOrderByIdUseCase } from '../../../application/use-cases/orders/get-order-by-id/get-order-by-id';
 import { OrdersController } from '../controllers/order.controller';
 
 const router: Router = Router();
 
-const orderRepository = new MockOrderRepository();
+const orderRepository = new MongooseOrderRepository();
 
 const getOrdersUseCase = new GetOrdersUseCase(
   orderRepository,

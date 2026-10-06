@@ -13,6 +13,7 @@ import { GetAuctionBidsUseCase } from '../../../application/use-cases/bids/get-a
 
 import { MongooseAuctionRepository } from '../../persistence/mongoose/repositories/mongoose-auction.repository';
 import { MongooseBidRepository } from '../../persistence/mongoose/repositories/mongoose-bid.repository';
+import { MongooseOrderRepository } from '../../persistence/mongoose/repositories/mongoose-order.repository';
 
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { validationMiddleware } from '../middlewares/validation.middleware';
@@ -24,14 +25,17 @@ import {
   createBidValidator,
 } from '../validators/bid.validator';
 
+
 const router: Router = Router();
 
 const auctionRepository = new MongooseAuctionRepository();
 const bidRepository = new MongooseBidRepository();
+const orderRepository = new MongooseOrderRepository();
 
 const getAuctionsUseCase = new GetAuctionsUseCase(
   auctionRepository,
   bidRepository,
+  orderRepository,
 );
 
 const createAuctionUseCase = new CreateAuctionUseCase(
@@ -41,6 +45,7 @@ const createAuctionUseCase = new CreateAuctionUseCase(
 const getAuctionByIdUseCase = new GetAuctionByIdUseCase(
   auctionRepository,
   bidRepository,
+  orderRepository,
 );
 
 const cancelAuctionUseCase = new CancelAuctionUseCase(
@@ -50,6 +55,7 @@ const cancelAuctionUseCase = new CancelAuctionUseCase(
 const createBidUseCase = new CreateBidUseCase(
   auctionRepository,
   bidRepository,
+  orderRepository,
 );
 
 const getAuctionBidsUseCase = new GetAuctionBidsUseCase(
