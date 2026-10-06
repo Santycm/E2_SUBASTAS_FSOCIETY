@@ -8,3 +8,10 @@ export function calculateOrderExpiration(
     createdAt.getTime() + ORDER_PAYMENT_DURATION_MS,
   );
 }
+
+export function isOrderExpired(
+  expiresAt: Date,
+  now: Date = new Date(),
+): boolean {
+  return expiresAt <= now;
+}
