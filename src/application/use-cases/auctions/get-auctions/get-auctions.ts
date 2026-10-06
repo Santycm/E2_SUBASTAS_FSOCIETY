@@ -3,6 +3,7 @@ import { AuctionRepository } from '../../../../domain/ports/auction.repository';
 import { BidRepository } from '../../../../domain/ports/bid.repository';
 import { GetAuctionsDto } from './dto/get-auctions.dto';
 import { CloseAuctionUseCase } from '../close-auction/close-auction';
+import { OrderRepository } from '../../../../domain/ports/order.repository';
 
 export interface GetAuctionsResult {
   data: Auction[];
@@ -20,10 +21,12 @@ export class GetAuctionsUseCase {
   constructor(
     private readonly auctionRepository: AuctionRepository,
     bidRepository: BidRepository,
+    orderRepository: OrderRepository,
   ) {
     this.closeAuctionUseCase = new CloseAuctionUseCase(
       auctionRepository,
       bidRepository,
+      orderRepository,
     );
   }
 

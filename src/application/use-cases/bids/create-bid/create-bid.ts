@@ -1,8 +1,10 @@
 import { AuctionRepository } from '../../../../domain/ports/auction.repository';
 import { BidRepository } from '../../../../domain/ports/bid.repository';
+import { OrderRepository } from '../../../../domain/ports/order.repository';
 import { Bid } from '../../../../domain/entities/bid';
 import { validateBid } from '../../../../domain/rules/bid.rules';
 import { CreateBidDto } from './dto/create-bid.dto';
+import { CloseAuctionUseCase } from '../../auctions/close-auction/close-auction';
 
 export interface CreateBidResult {
   bid: Bid;
@@ -12,10 +14,19 @@ export interface CreateBidResult {
 }
 
 export class CreateBidUseCase {
+  private readonly closeAuctionUseCase: CloseAuctionUseCase;
+
   constructor(
     private readonly auctionRepository: AuctionRepository,
     private readonly bidRepository: BidRepository,
-  ) {}
+    orderRepository: OrderRepository,
+  ) {
+    this.closeAuctionUseCase = new CloseAuctionUseCase(
+      auctionRepository,
+      bidRepository,
+      orderRepository,
+    );
+  }
 
   async execute(
     dto: CreateBidDto,
@@ -28,13 +39,16 @@ export class CreateBidUseCase {
       return null;
     }
 
+    const currentAuction =
+      await this.closeAuctionUseCase.execute(auction);
+
     const highestBid =
       await this.bidRepository.findHighestAcceptedByAuctionId(
         dto.auctionId,
       );
 
     const validation = validateBid(
-      auction,
+      currentAuction,
       dto.bidderId,
       dto.amount,
       highestBid?.bidderId ?? null,
@@ -51,7 +65,7 @@ export class CreateBidUseCase {
 
     if (validation.valid) {
       await this.auctionRepository.updateCurrentBid(
-        auction.id,
+        currentAuction.id,
         dto.amount,
       );
     }
@@ -62,7 +76,7 @@ export class CreateBidUseCase {
       bidderId: dto.bidderId,
       currentBid: validation.valid
         ? dto.amount
-        : auction.currentBid,
+        : currentAuction.currentBid,
     };
   }
 }

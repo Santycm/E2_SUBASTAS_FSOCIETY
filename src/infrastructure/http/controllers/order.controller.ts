@@ -2,20 +2,34 @@ import { Request, Response } from 'express';
 
 import { GetOrdersUseCase } from '../../../application/use-cases/orders/get-orders/get-orders';
 import { GetOrderByIdUseCase } from '../../../application/use-cases/orders/get-order-by-id/get-order-by-id';
+import { GetSellerOrdersUseCase } from '../../../application/use-cases/orders/get-seller-orders/get-seller-orders';
 
 export class OrdersController {
   constructor(
     private readonly getOrdersUseCase: GetOrdersUseCase,
     private readonly getOrderByIdUseCase: GetOrderByIdUseCase,
+    private readonly getSellerOrdersUseCase: GetSellerOrdersUseCase,
   ) {}
 
   getOrders = async (
-    _req: Request,
+    req: Request,
     res: Response,
   ): Promise<void> => {
-    const orders = await this.getOrdersUseCase.execute();
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
 
-    res.json(orders);
+    const result = await this.getOrdersUseCase.execute({
+      buyerId: req.user!.id,
+      page,
+      limit,
+      status: req.query.status as
+        | 'PENDING'
+        | 'PAID'
+        | 'EXPIRED'
+        | undefined,
+    });
+
+    res.json(result);
   };
 
   getOrder = async (
@@ -24,6 +38,7 @@ export class OrdersController {
   ): Promise<void> => {
     const order = await this.getOrderByIdUseCase.execute(
       req.params.id.toString(),
+      req.user!.id,
     );
 
     if (!order) {
@@ -35,5 +50,27 @@ export class OrdersController {
     }
 
     res.json(order);
+  };
+
+  getSellerOrders = async (
+    req: Request,
+    res: Response,
+  ): Promise<void> => {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+
+    const result =
+      await this.getSellerOrdersUseCase.execute({
+        sellerId: req.user!.id,
+        page,
+        limit,
+        status: req.query.status as
+          | 'PENDING'
+          | 'PAID'
+          | 'EXPIRED'
+          | undefined,
+      });
+
+    res.json(result);
   };
 }

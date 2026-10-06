@@ -1,6 +1,7 @@
 import { Auction } from '../../../../domain/entities/auction';
 import { AuctionRepository } from '../../../../domain/ports/auction.repository';
 import { BidRepository } from '../../../../domain/ports/bid.repository';
+import { OrderRepository } from '../../../../domain/ports/order.repository';
 import { CloseAuctionUseCase } from '../close-auction/close-auction';
 
 export class GetAuctionByIdUseCase {
@@ -9,10 +10,12 @@ export class GetAuctionByIdUseCase {
   constructor(
     private readonly auctionRepository: AuctionRepository,
     bidRepository: BidRepository,
+    orderRepository: OrderRepository,
   ) {
     this.closeAuctionUseCase = new CloseAuctionUseCase(
       auctionRepository,
       bidRepository,
+      orderRepository,
     );
   }
 
