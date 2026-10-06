@@ -28,39 +28,36 @@ export class CreateBidUseCase {
       return null;
     }
 
+    const highestBid =
+      await this.bidRepository.findHighestAcceptedByAuctionId(
+        dto.auctionId,
+      );
+
     const validation = validateBid(
       auction,
       dto.bidderId,
       dto.amount,
+      highestBid?.bidderId ?? null,
     );
 
-    const existingBids = await this.bidRepository.findByAuctionId(
-      dto.auctionId,
-    );
-
-    const bid: Bid = {
-      id: `bid-${String(existingBids.length + 1).padStart(3, '0')}`,
+    const savedBid = await this.bidRepository.save({
       auctionId: dto.auctionId,
       bidderId: dto.bidderId,
       amount: dto.amount,
       status: validation.valid ? 'ACCEPTED' : 'REJECTED',
       rejectionReason: validation.reason,
       createdAt: new Date(),
-    };
-
-    await this.bidRepository.save(bid);
+    });
 
     if (validation.valid) {
-      const updatedAuction = {
-        ...auction,
-        currentBid: dto.amount,
-      };
-
-      await this.auctionRepository.update(updatedAuction);
+      await this.auctionRepository.updateCurrentBid(
+        auction.id,
+        dto.amount,
+      );
     }
 
     return {
-      bid,
+      bid: savedBid,
       auctionId: dto.auctionId,
       bidderId: dto.bidderId,
       currentBid: validation.valid

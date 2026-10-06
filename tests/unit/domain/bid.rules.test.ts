@@ -1,26 +1,27 @@
 import { Auction } from '../../../src/domain/entities/auction';
 import { validateBid } from '../../../src/domain/rules/bid.rules';
 
+const auction: Auction = {
+  id: 'auction-1',
+  title: 'Laptop',
+  description: 'Laptop usada',
+  categoryId: 'category-1',
+  sellerId: 'seller-1',
+  basePrice: 100000,
+  minimumIncrement: 10000,
+  currentBid: null,
+  status: 'OPEN',
+  closesAt: new Date('2026-12-01T12:00:00Z'),
+  createdAt: new Date('2026-11-01T12:00:00Z'),
+};
+
 describe('validateBid', () => {
-  const auction: Auction = {
-    id: 'auction-1',
-    title: 'MacBook Pro',
-    description: 'MacBook Pro M3',
-    categoryId: 'category-1',
-    sellerId: 'seller-1',
-    basePrice: 1000000,
-    minimumIncrement: 100000,
-    currentBid: null,
-    status: 'OPEN',
-    closesAt: new Date('2026-10-10T20:00:00Z'),
-    createdAt: new Date('2026-10-01T20:00:00Z'),
-  };
-
-  it('should accept the first bid when it is equal to the base price', () => {
+  it('accepts the first bid at the base price', () => {
     const result = validateBid(
       auction,
       'bidder-1',
-      1000000,
+      100000,
+      null,
     );
 
     expect(result).toEqual({
@@ -29,24 +30,12 @@ describe('validateBid', () => {
     });
   });
 
-  it('should accept the first bid when it is above the base price', () => {
+  it('rejects a bid below the base price', () => {
     const result = validateBid(
       auction,
       'bidder-1',
-      1200000,
-    );
-
-    expect(result).toEqual({
-      valid: true,
-      reason: null,
-    });
-  });
-
-  it('should reject the first bid when it is below the base price', () => {
-    const result = validateBid(
-      auction,
-      'bidder-1',
-      900000,
+      90000,
+      null,
     );
 
     expect(result).toEqual({
@@ -55,11 +44,12 @@ describe('validateBid', () => {
     });
   });
 
-  it('should reject a bid from the seller', () => {
+  it('rejects a bid from the seller', () => {
     const result = validateBid(
       auction,
       'seller-1',
-      1500000,
+      100000,
+      null,
     );
 
     expect(result).toEqual({
@@ -68,52 +58,32 @@ describe('validateBid', () => {
     });
   });
 
-  it('should reject a bid below the minimum increment', () => {
-    const auctionWithBid: Auction = {
-      ...auction,
-      currentBid: 1500000,
-    };
-
+  it('rejects a bid when the auction is cancelled', () => {
     const result = validateBid(
-      auctionWithBid,
+      {
+        ...auction,
+        status: 'CANCELLED',
+      },
       'bidder-1',
-      1500000,
+      100000,
+      null,
     );
 
     expect(result).toEqual({
       valid: false,
-      reason: 'AMOUNT_BELOW_MINIMUM',
+      reason: 'AUCTION_CANCELLED',
     });
   });
 
-  it('should accept a bid equal to the current bid plus the minimum increment', () => {
-    const auctionWithBid: Auction = {
-      ...auction,
-      currentBid: 1500000,
-    };
-
+  it('rejects a bid when the auction is closed', () => {
     const result = validateBid(
-      auctionWithBid,
+      {
+        ...auction,
+        status: 'CLOSED',
+      },
       'bidder-1',
-      1600000,
-    );
-
-    expect(result).toEqual({
-      valid: true,
-      reason: null,
-    });
-  });
-
-  it('should reject bids when the auction is closed', () => {
-    const closedAuction: Auction = {
-      ...auction,
-      status: 'CLOSED',
-    };
-
-    const result = validateBid(
-      closedAuction,
-      'bidder-1',
-      1500000,
+      100000,
+      null,
     );
 
     expect(result).toEqual({
@@ -122,21 +92,71 @@ describe('validateBid', () => {
     });
   });
 
-  it('should reject bids when the auction is cancelled', () => {
-    const cancelledAuction: Auction = {
-      ...auction,
-      status: 'CANCELLED',
-    };
-
+  it('rejects a bid when the auction is not open', () => {
     const result = validateBid(
-      cancelledAuction,
+      {
+        ...auction,
+        status: 'NO_BIDS',
+      },
       'bidder-1',
-      1500000,
+      100000,
+      null,
     );
 
     expect(result).toEqual({
       valid: false,
-      reason: 'AUCTION_CANCELLED',
+      reason: 'AUCTION_NOT_OPEN',
+    });
+  });
+
+  it('rejects a bid below the minimum increment', () => {
+    const result = validateBid(
+      {
+        ...auction,
+        currentBid: 150000,
+      },
+      'bidder-1',
+      155000,
+      'bidder-2',
+    );
+
+    expect(result).toEqual({
+      valid: false,
+      reason: 'AMOUNT_BELOW_MINIMUM',
+    });
+  });
+
+  it('accepts a bid that meets the minimum increment', () => {
+    const result = validateBid(
+      {
+        ...auction,
+        currentBid: 150000,
+      },
+      'bidder-1',
+      160000,
+      'bidder-2',
+    );
+
+    expect(result).toEqual({
+      valid: true,
+      reason: null,
+    });
+  });
+
+  it('rejects the leading bidder from outbidding themselves', () => {
+    const result = validateBid(
+      {
+        ...auction,
+        currentBid: 150000,
+      },
+      'bidder-1',
+      160000,
+      'bidder-1',
+    );
+
+    expect(result).toEqual({
+      valid: false,
+      reason: 'LEADING_BIDDER_CANNOT_OUTBID_SELF',
     });
   });
 });

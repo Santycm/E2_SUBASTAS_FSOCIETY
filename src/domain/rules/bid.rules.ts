@@ -10,6 +10,7 @@ export function validateBid(
   auction: Auction,
   bidderId: string,
   amount: number,
+  currentBidderId: string | null,
 ): BidValidationResult {
   if (auction.status === 'CANCELLED') {
     return {
@@ -39,9 +40,17 @@ export function validateBid(
     };
   }
 
-  const minimumAmount = auction.currentBid === null
-    ? auction.basePrice
-    : auction.currentBid + auction.minimumIncrement;
+  if (currentBidderId === bidderId) {
+    return {
+      valid: false,
+      reason: 'LEADING_BIDDER_CANNOT_OUTBID_SELF',
+    };
+  }
+
+  const minimumAmount =
+    auction.currentBid === null
+      ? auction.basePrice
+      : auction.currentBid + auction.minimumIncrement;
 
   if (amount < minimumAmount) {
     return {
@@ -55,3 +64,4 @@ export function validateBid(
     reason: null,
   };
 }
+

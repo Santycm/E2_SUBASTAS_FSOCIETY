@@ -1,25 +1,21 @@
-import { Auction } from '../../../../domain/entities/auction';
+import { Auction } from "../../../../domain/entities/auction";
 import {
   AuctionRepository,
   CreateAuctionData,
   FindAuctionsFilters,
   FindAuctionsResult,
-} from '../../../../domain/ports/auction.repository';
+} from "../../../../domain/ports/auction.repository";
 
 export class MockAuctionRepository implements AuctionRepository {
   private auctions: Auction[] = [];
 
-  async findAll(
-    filters: FindAuctionsFilters,
-  ): Promise<FindAuctionsResult> {
+  async findAll(filters: FindAuctionsFilters): Promise<FindAuctionsResult> {
     const filteredAuctions = this.auctions.filter((auction) => {
       const matchesCategory =
-        !filters.categoryId ||
-        auction.categoryId === filters.categoryId;
+        !filters.categoryId || auction.categoryId === filters.categoryId;
 
       const matchesStatus =
-        !filters.status ||
-        auction.status === filters.status;
+        !filters.status || auction.status === filters.status;
 
       return matchesCategory && matchesStatus;
     });
@@ -28,10 +24,7 @@ export class MockAuctionRepository implements AuctionRepository {
 
     const skip = (filters.page - 1) * filters.limit;
 
-    const data = filteredAuctions.slice(
-      skip,
-      skip + filters.limit,
-    );
+    const data = filteredAuctions.slice(skip, skip + filters.limit);
 
     return {
       data,
@@ -44,14 +37,12 @@ export class MockAuctionRepository implements AuctionRepository {
   }
 
   async findBySellerId(sellerId: string): Promise<Auction[]> {
-    return this.auctions.filter(
-      (auction) => auction.sellerId === sellerId,
-    );
+    return this.auctions.filter((auction) => auction.sellerId === sellerId);
   }
 
   async save(data: CreateAuctionData): Promise<Auction> {
     const auction: Auction = {
-      id: `mock-${String(this.auctions.length + 1).padStart(3, '0')}`,
+      id: `mock-${String(this.auctions.length + 1).padStart(3, "0")}`,
       ...data,
     };
 
@@ -66,11 +57,25 @@ export class MockAuctionRepository implements AuctionRepository {
     );
 
     if (index === -1) {
-      throw new Error('AUCTION_NOT_FOUND');
+      throw new Error("AUCTION_NOT_FOUND");
     }
 
     this.auctions[index].status = status;
 
     return this.auctions[index];
+  }
+
+  async updateCurrentBid(id: string, currentBid: number): Promise<Auction> {
+    const auction = this.auctions.find(
+      (currentAuction) => currentAuction.id === id,
+    );
+
+    if (!auction) {
+      throw new Error("AUCTION_NOT_FOUND");
+    }
+
+    auction.currentBid = currentBid;
+
+    return auction;
   }
 }

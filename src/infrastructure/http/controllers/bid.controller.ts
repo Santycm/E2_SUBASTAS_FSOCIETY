@@ -15,7 +15,7 @@ export class BidsController {
   ): Promise<void> => {
     const result = await this.createBidUseCase.execute({
       auctionId: req.params.id.toString(),
-      bidderId: req.body.bidderId,
+      bidderId: req.user!.id,
       amount: Number(req.body.amount),
     });
 
@@ -24,6 +24,11 @@ export class BidsController {
         message: 'AUCTION_NOT_FOUND',
       });
 
+      return;
+    }
+
+    if (result.bid.status === 'REJECTED') {
+      res.status(400).json(result);
       return;
     }
 

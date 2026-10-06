@@ -96,6 +96,27 @@ export class MongooseAuctionRepository implements AuctionRepository {
     return this.toDomain(updatedAuction);
   }
 
+  async updateCurrentBid(id: string, currentBid: number): Promise<Auction> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new Error("INVALID_AUCTION_ID");
+    }
+
+    const updatedAuction = await AuctionModel.findByIdAndUpdate(
+      id,
+      { currentBid },
+      {
+        returnDocument: "after",
+        runValidators: true,
+      },
+    ).lean();
+
+    if (!updatedAuction) {
+      throw new Error("AUCTION_NOT_FOUND");
+    }
+
+    return this.toDomain(updatedAuction);
+  }
+
   private toDomain(
     auction:
       | AuctionDocument
