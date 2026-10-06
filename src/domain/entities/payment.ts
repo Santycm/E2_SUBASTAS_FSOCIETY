@@ -11,6 +11,7 @@ export interface Payment {
   status: PaymentStatus;
   provider: string;
   externalPaymentId: string | null;
+  externalEventId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

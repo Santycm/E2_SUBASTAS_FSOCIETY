@@ -13,6 +13,9 @@ const controller = new PaymentsController(
   handlePaymentWebhookUseCase,
 );
 
-router.post('/webhook', controller.handleWebhook);
+router.post(
+  '/webhook',
+  controller.handleWebhook,
+);
 
 export default router;

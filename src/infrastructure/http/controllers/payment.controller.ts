@@ -11,10 +11,15 @@ export class PaymentsController {
     req: Request,
     res: Response,
   ): Promise<void> => {
-    await this.handlePaymentWebhookUseCase.execute(req.body);
+    await this.handlePaymentWebhookUseCase.execute({
+      eventId: req.body.eventId,
+      paymentId: req.body.paymentId,
+      status: req.body.status,
+      amount: req.body.amount,
+    });
 
     res.status(200).json({
-      message: 'Payment webhook received successfully',
+      received: true,
     });
   };
 }
