@@ -1,16 +1,15 @@
 import { Types } from "mongoose";
 
 import { Order } from "../../../../domain/entities/order";
-import { CreateOrderData, OrderRepository } from "../../../../domain/ports/order.repository";
+import {
+  CreateOrderData,
+  FindOrdersFilters,
+  FindOrdersResult,
+  OrderRepository,
+} from "../../../../domain/ports/order.repository";
 import { OrderModel } from "../models/order.model";
 
 export class MongooseOrderRepository implements OrderRepository {
-  async findAll(): Promise<Order[]> {
-    const orders = await OrderModel.find().sort({ createdAt: -1 }).lean();
-
-    return orders.map((order) => this.toDomain(order));
-  }
-
   async findById(id: string): Promise<Order | null> {
     if (!Types.ObjectId.isValid(id)) {
       return null;
@@ -37,14 +36,79 @@ export class MongooseOrderRepository implements OrderRepository {
     return this.toDomain(order);
   }
 
-  async findByBuyerId(buyerId: string): Promise<Order[]> {
-    const orders = await OrderModel.find({
+  async findByBuyerId(
+    buyerId: string,
+    filters: FindOrdersFilters,
+  ): Promise<FindOrdersResult> {
+    const query: {
+      buyerId: string;
+      status?: Order["status"];
+    } = {
       buyerId,
-    })
-      .sort({ createdAt: -1 })
-      .lean();
+    };
 
-    return orders.map((order) => this.toDomain(order));
+    if (filters.status) {
+      query.status = filters.status;
+    }
+
+    const skip = (filters.page - 1) * filters.limit;
+
+    const [orders, total] = await Promise.all([
+      OrderModel.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(filters.limit)
+        .lean(),
+
+      OrderModel.countDocuments(query),
+    ]);
+
+    return {
+      data: orders.map((order) => this.toDomain(order)),
+      total,
+    };
+  }
+
+  async findByAuctionIds(
+    auctionIds: string[],
+    filters: FindOrdersFilters,
+  ): Promise<FindOrdersResult> {
+    if (auctionIds.length === 0) {
+      return {
+        data: [],
+        total: 0,
+      };
+    }
+
+    const query: {
+      auctionId: { $in: string[] };
+      status?: Order["status"];
+    } = {
+      auctionId: {
+        $in: auctionIds,
+      },
+    };
+
+    if (filters.status) {
+      query.status = filters.status;
+    }
+
+    const skip = (filters.page - 1) * filters.limit;
+
+    const [orders, total] = await Promise.all([
+      OrderModel.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(filters.limit)
+        .lean(),
+
+      OrderModel.countDocuments(query),
+    ]);
+
+    return {
+      data: orders.map((order) => this.toDomain(order)),
+      total,
+    };
   }
 
   async save(data: CreateOrderData): Promise<Order> {

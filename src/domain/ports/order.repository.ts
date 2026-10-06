@@ -9,14 +9,31 @@ export interface CreateOrderData {
   expiresAt: Date;
 }
 
-export interface OrderRepository {
-  findAll(): Promise<Order[]>;
+export interface FindOrdersFilters {
+  page: number;
+  limit: number;
+  status?: Order['status'];
+}
 
+export interface FindOrdersResult {
+  data: Order[];
+  total: number;
+}
+
+export interface OrderRepository {
   findById(id: string): Promise<Order | null>;
 
   findByAuctionId(auctionId: string): Promise<Order | null>;
 
-  findByBuyerId(buyerId: string): Promise<Order[]>;
+  findByBuyerId(
+    buyerId: string,
+    filters: FindOrdersFilters,
+  ): Promise<FindOrdersResult>;
+
+  findByAuctionIds(
+    auctionIds: string[],
+    filters: FindOrdersFilters,
+  ): Promise<FindOrdersResult>;
 
   save(data: CreateOrderData): Promise<Order>;
 
