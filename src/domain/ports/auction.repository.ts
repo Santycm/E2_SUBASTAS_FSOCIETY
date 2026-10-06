@@ -35,4 +35,6 @@ export interface AuctionRepository {
   save(data: CreateAuctionData): Promise<Auction>;
 
   updateStatus(id: string, status: Auction["status"]): Promise<Auction>;
+
+  updateCurrentBid(id: string, currentBid: number): Promise<Auction>;
 }
