@@ -1,6 +1,8 @@
 import { Auction } from '../../../../domain/entities/auction';
 import { AuctionRepository } from '../../../../domain/ports/auction.repository';
+import { BidRepository } from '../../../../domain/ports/bid.repository';
 import { GetAuctionsDto } from './dto/get-auctions.dto';
+import { CloseAuctionUseCase } from '../close-auction/close-auction';
 
 export interface GetAuctionsResult {
   data: Auction[];
@@ -13,9 +15,17 @@ export interface GetAuctionsResult {
 }
 
 export class GetAuctionsUseCase {
+  private readonly closeAuctionUseCase: CloseAuctionUseCase;
+
   constructor(
     private readonly auctionRepository: AuctionRepository,
-  ) {}
+    bidRepository: BidRepository,
+  ) {
+    this.closeAuctionUseCase = new CloseAuctionUseCase(
+      auctionRepository,
+      bidRepository,
+    );
+  }
 
   async execute(dto: GetAuctionsDto): Promise<GetAuctionsResult> {
     const page = dto.page ?? 1;
@@ -28,10 +38,16 @@ export class GetAuctionsUseCase {
       limit,
     });
 
+    const data = await Promise.all(
+      result.data.map((auction) =>
+        this.closeAuctionUseCase.execute(auction),
+      ),
+    );
+
     const totalPages = Math.ceil(result.total / limit);
 
     return {
-      data: result.data,
+      data,
       pagination: {
         page,
         limit,

@@ -31,6 +31,7 @@ const bidRepository = new MongooseBidRepository();
 
 const getAuctionsUseCase = new GetAuctionsUseCase(
   auctionRepository,
+  bidRepository,
 );
 
 const createAuctionUseCase = new CreateAuctionUseCase(
@@ -39,6 +40,7 @@ const createAuctionUseCase = new CreateAuctionUseCase(
 
 const getAuctionByIdUseCase = new GetAuctionByIdUseCase(
   auctionRepository,
+  bidRepository,
 );
 
 const cancelAuctionUseCase = new CancelAuctionUseCase(
