@@ -21,6 +21,12 @@ app.use('/api/v1/orders', ordersRoutes);
 app.use('/api/v1/users', usersRoutes);
 app.use('/api/v1/payments', paymentsRoutes);
 
+app.get('/health', (_req, res) => {
+  res.status(200).json({
+    status: 'ok',
+  });
+});
+
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
 
