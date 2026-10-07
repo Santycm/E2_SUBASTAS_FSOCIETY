@@ -1,14 +1,19 @@
 import { Types } from 'mongoose';
 
 import { Category } from '../../../../domain/entities/category';
-import { CategoryRepository } from '../../../../domain/ports/category.repository';
+import {
+  CategoryRepository,
+  CreateCategoryData,
+} from '../../../../domain/ports/category.repository';
 
 import {
   CategoryDocument,
   CategoryModel,
 } from '../models/category.model';
 
-export class MongooseCategoryRepository implements CategoryRepository {
+export class MongooseCategoryRepository
+  implements CategoryRepository
+{
   async findAll(): Promise<Category[]> {
     const categories = await CategoryModel.find()
       .sort({ name: 1 })
@@ -29,6 +34,12 @@ export class MongooseCategoryRepository implements CategoryRepository {
     }
 
     return this.toDomain(category);
+  }
+
+  async save(data: CreateCategoryData): Promise<Category> {
+    const category = await CategoryModel.create(data);
+
+    return this.toDomain(category.toObject());
   }
 
   private toDomain(
