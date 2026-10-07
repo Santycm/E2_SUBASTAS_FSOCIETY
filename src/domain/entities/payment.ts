@@ -10,7 +10,9 @@ export interface Payment {
   amount: number;
   status: PaymentStatus;
   provider: string;
+  externalOrderId: string;
   externalPaymentId: string | null;
+  externalEventId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
