@@ -1,13 +1,13 @@
-import { Document, Schema, model } from "mongoose";
+import { Document, Schema, Types, model } from 'mongoose';
 
 import {
   BidRejectionReason,
   BidStatus,
-} from "../../../../domain/entities/bid";
+} from '../../../../domain/entities/bid';
 
 export interface BidDocument extends Document {
-  auctionId: string;
-  bidderId: string;
+  auctionId: Types.ObjectId;
+  bidderId: Types.ObjectId;
   amount: number;
   status: BidStatus;
   rejectionReason: BidRejectionReason | null;
@@ -17,14 +17,14 @@ export interface BidDocument extends Document {
 const bidSchema = new Schema<BidDocument>(
   {
     auctionId: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: 'Auction',
       required: true,
-      trim: true,
     },
     bidderId: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: 'User',
       required: true,
-      trim: true,
     },
     amount: {
       type: Number,
@@ -32,18 +32,18 @@ const bidSchema = new Schema<BidDocument>(
     },
     status: {
       type: String,
-      enum: ["ACCEPTED", "REJECTED"],
+      enum: ['ACCEPTED', 'REJECTED'],
       required: true,
     },
     rejectionReason: {
       type: String,
       enum: [
-        "AUCTION_NOT_OPEN",
-        "AUCTION_CLOSED",
-        "SELLER_CANNOT_BID",
-        "LEADING_BIDDER_CANNOT_OUTBID_SELF",
-        "AMOUNT_BELOW_MINIMUM",
-        "AUCTION_CANCELLED",
+        'AUCTION_NOT_OPEN',
+        'AUCTION_CLOSED',
+        'SELLER_CANNOT_BID',
+        'LEADING_BIDDER_CANNOT_OUTBID_SELF',
+        'AMOUNT_BELOW_MINIMUM',
+        'AUCTION_CANCELLED',
       ],
       default: null,
     },
@@ -57,6 +57,18 @@ const bidSchema = new Schema<BidDocument>(
   },
 );
 
-bidSchema.index({ auctionId: 1, status: 1, amount: -1 });
+bidSchema.index({
+  auctionId: 1,
+  status: 1,
+  amount: -1,
+});
 
-export const BidModel = model<BidDocument>("Bid", bidSchema);
+bidSchema.index({
+  bidderId: 1,
+  createdAt: -1,
+});
+
+export const BidModel = model<BidDocument>(
+  'Bid',
+  bidSchema,
+);

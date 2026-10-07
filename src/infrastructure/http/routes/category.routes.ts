@@ -1,16 +1,23 @@
 import { Router } from 'express';
 
-import { authMiddleware } from '../middlewares/auth.middleware';
-import { CategoriesController } from '../controllers/category.controller';
-
+import { CreateCategoryUseCase } from '../../../application/use-cases/categories/create-category/create-category';
 import { GetCategoriesUseCase } from '../../../application/use-cases/categories/get-categories/get-categories';
 import { GetCategoryByIdUseCase } from '../../../application/use-cases/categories/get-category-by-id/get-category-by-id';
 
-import { MockCategoryRepository } from '../../persistence/mock/repositories/mock-category.repository';
+import { CategoriesController } from '../controllers/category.controller';
+import { authMiddleware } from '../middlewares/auth.middleware';
+import { validationMiddleware } from '../middlewares/validation.middleware';
+import { createCategoryValidator } from '../validators/category.validator';
+
+import { MongooseCategoryRepository } from '../../persistence/mongoose/repositories/mongoose-category.repository';
 
 const router: Router = Router();
 
-const categoryRepository = new MockCategoryRepository();
+const categoryRepository = new MongooseCategoryRepository();
+
+const createCategoryUseCase = new CreateCategoryUseCase(
+  categoryRepository,
+);
 
 const getCategoriesUseCase = new GetCategoriesUseCase(
   categoryRepository,
@@ -21,11 +28,21 @@ const getCategoryByIdUseCase = new GetCategoryByIdUseCase(
 );
 
 const controller = new CategoriesController(
+  createCategoryUseCase,
   getCategoriesUseCase,
   getCategoryByIdUseCase,
 );
 
-router.get('/', authMiddleware, controller.getCategories);
-router.get('/:id', authMiddleware, controller.getCategoryById);
+router.get('/', controller.getCategories);
+
+router.get('/:id', controller.getCategoryById);
+
+router.post(
+  '/',
+  authMiddleware,
+  createCategoryValidator,
+  validationMiddleware,
+  controller.createCategory,
+);
 
 export default router;

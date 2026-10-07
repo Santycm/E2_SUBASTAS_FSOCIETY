@@ -1,12 +1,12 @@
-import { Document, Schema, model } from 'mongoose';
+import { Document, Schema, Types, model } from 'mongoose';
 
 import { AuctionStatus } from '../../../../domain/entities/auction';
 
 export interface AuctionDocument extends Document {
   title: string;
   description: string;
-  categoryId: string;
-  sellerId: string;
+  categoryId: Types.ObjectId;
+  sellerId: Types.ObjectId;
   basePrice: number;
   minimumIncrement: number;
   currentBid: number | null;
@@ -28,14 +28,14 @@ const auctionSchema = new Schema<AuctionDocument>(
       trim: true,
     },
     categoryId: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: 'Category',
       required: true,
-      trim: true,
     },
     sellerId: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: 'User',
       required: true,
-      trim: true,
     },
     basePrice: {
       type: Number,
@@ -68,6 +68,10 @@ const auctionSchema = new Schema<AuctionDocument>(
     versionKey: false,
   },
 );
+
+auctionSchema.index({ categoryId: 1 });
+auctionSchema.index({ sellerId: 1 });
+auctionSchema.index({ status: 1, closesAt: 1 });
 
 export const AuctionModel = model<AuctionDocument>(
   'Auction',

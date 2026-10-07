@@ -1,10 +1,10 @@
-import { Document, Schema, model } from 'mongoose';
+import { Document, Schema, Types, model } from 'mongoose';
 
 import { OrderStatus } from '../../../../domain/entities/order';
 
 export interface OrderDocument extends Document {
-  auctionId: string;
-  buyerId: string;
+  auctionId: Types.ObjectId;
+  buyerId: Types.ObjectId;
   amount: number;
   status: OrderStatus;
   createdAt: Date;
@@ -14,14 +14,14 @@ export interface OrderDocument extends Document {
 const orderSchema = new Schema<OrderDocument>(
   {
     auctionId: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: 'Auction',
       required: true,
-      trim: true,
     },
     buyerId: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: 'User',
       required: true,
-      trim: true,
     },
     amount: {
       type: Number,
@@ -47,8 +47,14 @@ const orderSchema = new Schema<OrderDocument>(
   },
 );
 
-orderSchema.index({ auctionId: 1 }, { unique: true });
-orderSchema.index({ buyerId: 1 });
+orderSchema.index(
+  { auctionId: 1 },
+  { unique: true },
+);
+
+orderSchema.index({
+  buyerId: 1,
+});
 
 export const OrderModel = model<OrderDocument>(
   'Order',
