@@ -1,5 +1,5 @@
-import { PaymentRepository } from "../../../../domain/ports/payment.repository";
 import { Payment } from "../../../../domain/entities/payment";
+import { PaymentRepository } from "../../../../domain/ports/payment.repository";
 import { payments } from "../data/payments.data";
 
 export class MockPaymentRepository implements PaymentRepository {
@@ -15,6 +15,26 @@ export class MockPaymentRepository implements PaymentRepository {
     return payments.find((payment) => payment.orderId === orderId) ?? null;
   }
 
+  async findByExternalOrderId(
+    externalOrderId: string,
+  ): Promise<Payment | null> {
+    return (
+      payments.find(
+        (payment) => payment.externalOrderId === externalOrderId,
+      ) ?? null
+    );
+  }
+
+  async findByExternalEventId(
+    externalEventId: string,
+  ): Promise<Payment | null> {
+    return (
+      payments.find(
+        (payment) => payment.externalEventId === externalEventId,
+      ) ?? null
+    );
+  }
+
   async save(payment: Payment): Promise<Payment> {
     payments.push(payment);
 
@@ -22,7 +42,9 @@ export class MockPaymentRepository implements PaymentRepository {
   }
 
   async update(payment: Payment): Promise<Payment> {
-    const index = payments.findIndex((item) => item.id === payment.id);
+    const index = payments.findIndex(
+      (item) => item.id === payment.id,
+    );
 
     if (index === -1) {
       throw new Error("PAYMENT_NOT_FOUND");
@@ -31,14 +53,5 @@ export class MockPaymentRepository implements PaymentRepository {
     payments[index] = payment;
 
     return payment;
-  }
-
-  async findByExternalEventId(
-    externalEventId: string,
-  ): Promise<Payment | null> {
-    return (
-      payments.find((payment) => payment.externalEventId === externalEventId) ??
-      null
-    );
   }
 }

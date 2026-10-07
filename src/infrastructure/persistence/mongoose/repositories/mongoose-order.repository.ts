@@ -1,13 +1,14 @@
-import { Types } from "mongoose";
+import { Types } from 'mongoose';
 
-import { Order } from "../../../../domain/entities/order";
+import { Order } from '../../../../domain/entities/order';
 import {
   CreateOrderData,
   FindOrdersFilters,
   FindOrdersResult,
   OrderRepository,
-} from "../../../../domain/ports/order.repository";
-import { OrderModel } from "../models/order.model";
+} from '../../../../domain/ports/order.repository';
+
+import { OrderModel } from '../models/order.model';
 
 export class MongooseOrderRepository implements OrderRepository {
   async findById(id: string): Promise<Order | null> {
@@ -24,7 +25,13 @@ export class MongooseOrderRepository implements OrderRepository {
     return this.toDomain(order);
   }
 
-  async findByAuctionId(auctionId: string): Promise<Order | null> {
+  async findByAuctionId(
+    auctionId: string,
+  ): Promise<Order | null> {
+    if (!Types.ObjectId.isValid(auctionId)) {
+      return null;
+    }
+
     const order = await OrderModel.findOne({
       auctionId,
     }).lean();
@@ -40,9 +47,16 @@ export class MongooseOrderRepository implements OrderRepository {
     buyerId: string,
     filters: FindOrdersFilters,
   ): Promise<FindOrdersResult> {
+    if (!Types.ObjectId.isValid(buyerId)) {
+      return {
+        data: [],
+        total: 0,
+      };
+    }
+
     const query: {
       buyerId: string;
-      status?: Order["status"];
+      status?: Order['status'];
     } = {
       buyerId,
     };
@@ -80,12 +94,23 @@ export class MongooseOrderRepository implements OrderRepository {
       };
     }
 
+    const validAuctionIds = auctionIds.filter((id) =>
+      Types.ObjectId.isValid(id),
+    );
+
+    if (validAuctionIds.length === 0) {
+      return {
+        data: [],
+        total: 0,
+      };
+    }
+
     const query: {
       auctionId: { $in: string[] };
-      status?: Order["status"];
+      status?: Order['status'];
     } = {
       auctionId: {
-        $in: auctionIds,
+        $in: validAuctionIds,
       },
     };
 
@@ -119,7 +144,7 @@ export class MongooseOrderRepository implements OrderRepository {
 
   async update(order: Order): Promise<Order> {
     if (!Types.ObjectId.isValid(order.id)) {
-      throw new Error("INVALID_ORDER_ID");
+      throw new Error('INVALID_ORDER_ID');
     }
 
     const updatedOrder = await OrderModel.findByIdAndUpdate(
@@ -133,13 +158,13 @@ export class MongooseOrderRepository implements OrderRepository {
         expiresAt: order.expiresAt,
       },
       {
-        returnDocument: "after",
+        returnDocument: 'after',
         runValidators: true,
       },
     ).lean();
 
     if (!updatedOrder) {
-      throw new Error("ORDER_NOT_FOUND");
+      throw new Error('ORDER_NOT_FOUND');
     }
 
     return this.toDomain(updatedOrder);
@@ -147,17 +172,17 @@ export class MongooseOrderRepository implements OrderRepository {
 
   private toDomain(order: {
     _id: Types.ObjectId;
-    auctionId: string;
-    buyerId: string;
+    auctionId: Types.ObjectId;
+    buyerId: Types.ObjectId;
     amount: number;
-    status: Order["status"];
+    status: Order['status'];
     createdAt: Date;
     expiresAt: Date;
   }): Order {
     return {
       id: order._id.toString(),
-      auctionId: order.auctionId,
-      buyerId: order.buyerId,
+      auctionId: order.auctionId.toString(),
+      buyerId: order.buyerId.toString(),
       amount: order.amount,
       status: order.status,
       createdAt: order.createdAt,

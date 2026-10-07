@@ -1,20 +1,25 @@
-import { Types } from "mongoose";
+import { Types } from 'mongoose';
 
-import { Auction } from "../../../../domain/entities/auction";
+import { Auction } from '../../../../domain/entities/auction';
 import {
   AuctionRepository,
   CreateAuctionData,
   FindAuctionsFilters,
   FindAuctionsResult,
-} from "../../../../domain/ports/auction.repository";
+} from '../../../../domain/ports/auction.repository';
 
-import { AuctionDocument, AuctionModel } from "../models/auction.model";
+import {
+  AuctionDocument,
+  AuctionModel,
+} from '../models/auction.model';
 
 export class MongooseAuctionRepository implements AuctionRepository {
-  async findAll(filters: FindAuctionsFilters): Promise<FindAuctionsResult> {
+  async findAll(
+    filters: FindAuctionsFilters,
+  ): Promise<FindAuctionsResult> {
     const query: {
       categoryId?: string;
-      status?: Auction["status"];
+      status?: Auction['status'];
     } = {};
 
     if (filters.categoryId) {
@@ -58,6 +63,10 @@ export class MongooseAuctionRepository implements AuctionRepository {
   }
 
   async findBySellerId(sellerId: string): Promise<Auction[]> {
+    if (!Types.ObjectId.isValid(sellerId)) {
+      return [];
+    }
+
     const auctions = await AuctionModel.find({
       sellerId,
     })
@@ -73,9 +82,12 @@ export class MongooseAuctionRepository implements AuctionRepository {
     return this.toDomain(auction.toObject());
   }
 
-  async updateStatus(id: string, status: Auction["status"]): Promise<Auction> {
+  async updateStatus(
+    id: string,
+    status: Auction['status'],
+  ): Promise<Auction> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new Error("INVALID_AUCTION_ID");
+      throw new Error('INVALID_AUCTION_ID');
     }
 
     const updatedAuction = await AuctionModel.findByIdAndUpdate(
@@ -84,34 +96,37 @@ export class MongooseAuctionRepository implements AuctionRepository {
         status,
       },
       {
-        returnDocument: "after",
+        returnDocument: 'after',
         runValidators: true,
       },
     ).lean();
 
     if (!updatedAuction) {
-      throw new Error("AUCTION_NOT_FOUND");
+      throw new Error('AUCTION_NOT_FOUND');
     }
 
     return this.toDomain(updatedAuction);
   }
 
-  async updateCurrentBid(id: string, currentBid: number): Promise<Auction> {
+  async updateCurrentBid(
+    id: string,
+    currentBid: number,
+  ): Promise<Auction> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new Error("INVALID_AUCTION_ID");
+      throw new Error('INVALID_AUCTION_ID');
     }
 
     const updatedAuction = await AuctionModel.findByIdAndUpdate(
       id,
       { currentBid },
       {
-        returnDocument: "after",
+        returnDocument: 'after',
         runValidators: true,
       },
     ).lean();
 
     if (!updatedAuction) {
-      throw new Error("AUCTION_NOT_FOUND");
+      throw new Error('AUCTION_NOT_FOUND');
     }
 
     return this.toDomain(updatedAuction);
@@ -124,12 +139,12 @@ export class MongooseAuctionRepository implements AuctionRepository {
           _id: Types.ObjectId;
           title: string;
           description: string;
-          categoryId: string;
-          sellerId: string;
+          categoryId: Types.ObjectId;
+          sellerId: Types.ObjectId;
           basePrice: number;
           minimumIncrement: number;
           currentBid: number | null;
-          status: Auction["status"];
+          status: Auction['status'];
           closesAt: Date;
           createdAt: Date;
         },
@@ -138,8 +153,8 @@ export class MongooseAuctionRepository implements AuctionRepository {
       id: auction._id.toString(),
       title: auction.title,
       description: auction.description,
-      categoryId: auction.categoryId,
-      sellerId: auction.sellerId,
+      categoryId: auction.categoryId.toString(),
+      sellerId: auction.sellerId.toString(),
       basePrice: auction.basePrice,
       minimumIncrement: auction.minimumIncrement,
       currentBid: auction.currentBid,

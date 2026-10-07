@@ -1,12 +1,15 @@
-import { Types } from "mongoose";
+import { Types } from 'mongoose';
 
-import { Payment } from "../../../../domain/entities/payment";
+import { Payment } from '../../../../domain/entities/payment';
 import {
-  PaymentRepository,
   CreatePaymentData,
-} from "../../../../domain/ports/payment.repository";
+  PaymentRepository,
+} from '../../../../domain/ports/payment.repository';
 
-import { PaymentModel, PaymentDocument } from "../models/payment.model";
+import {
+  PaymentDocument,
+  PaymentModel,
+} from '../models/payment.model';
 
 export class MongoosePaymentRepository implements PaymentRepository {
   async findById(id: string): Promise<Payment | null> {
@@ -23,7 +26,13 @@ export class MongoosePaymentRepository implements PaymentRepository {
     return this.toDomain(payment);
   }
 
-  async findByOrderId(orderId: string): Promise<Payment | null> {
+  async findByOrderId(
+    orderId: string,
+  ): Promise<Payment | null> {
+    if (!Types.ObjectId.isValid(orderId)) {
+      return null;
+    }
+
     const payment = await PaymentModel.findOne({
       orderId,
     }).lean();
@@ -42,7 +51,9 @@ export class MongoosePaymentRepository implements PaymentRepository {
       externalOrderId,
     }).lean();
 
-    if (!payment) return null;
+    if (!payment) {
+      return null;
+    }
 
     return this.toDomain(payment);
   }
@@ -69,7 +80,7 @@ export class MongoosePaymentRepository implements PaymentRepository {
 
   async update(payment: Payment): Promise<Payment> {
     if (!Types.ObjectId.isValid(payment.id)) {
-      throw new Error("INVALID_PAYMENT_ID");
+      throw new Error('INVALID_PAYMENT_ID');
     }
 
     const updatedPayment = await PaymentModel.findByIdAndUpdate(
@@ -85,13 +96,13 @@ export class MongoosePaymentRepository implements PaymentRepository {
         updatedAt: payment.updatedAt,
       },
       {
-        returnDocument: "after",
+        returnDocument: 'after',
         runValidators: true,
       },
     ).lean();
 
     if (!updatedPayment) {
-      throw new Error("PAYMENT_NOT_FOUND");
+      throw new Error('PAYMENT_NOT_FOUND');
     }
 
     return this.toDomain(updatedPayment);
@@ -100,7 +111,7 @@ export class MongoosePaymentRepository implements PaymentRepository {
   private toDomain(payment: PaymentDocument): Payment {
     return {
       id: payment._id.toString(),
-      orderId: payment.orderId,
+      orderId: payment.orderId.toString(),
       amount: payment.amount,
       status: payment.status,
       provider: payment.provider,

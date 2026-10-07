@@ -1,9 +1,9 @@
-import { Document, Schema, model } from 'mongoose';
+import { Document, Schema, Types, model } from 'mongoose';
 
 import { PaymentStatus } from '../../../../domain/entities/payment';
 
 export interface PaymentDocument extends Document {
-  orderId: string;
+  orderId: Types.ObjectId;
   amount: number;
   status: PaymentStatus;
   provider: string;
@@ -17,9 +17,9 @@ export interface PaymentDocument extends Document {
 const paymentSchema = new Schema<PaymentDocument>(
   {
     orderId: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: 'Order',
       required: true,
-      trim: true,
     },
 
     amount: {
@@ -69,7 +69,9 @@ const paymentSchema = new Schema<PaymentDocument>(
   },
 );
 
-paymentSchema.index({ orderId: 1 });
+paymentSchema.index({
+  orderId: 1,
+});
 
 paymentSchema.index(
   { externalOrderId: 1 },
