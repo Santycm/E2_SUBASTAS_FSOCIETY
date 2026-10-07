@@ -1,6 +1,6 @@
-import { BidRepository } from '../../../../domain/ports/bid.repository';
-import { AuctionRepository } from '../../../../domain/ports/auction.repository';
-import { UserRepository } from '../../../../domain/ports/user.repository';
+import { BidRepository } from "../../../../domain/ports/bid.repository";
+import { AuctionRepository } from "../../../../domain/ports/auction.repository";
+import { UserRepository } from "../../../../domain/ports/user.repository";
 
 export class GetProfileUseCase {
   constructor(
@@ -9,15 +9,16 @@ export class GetProfileUseCase {
     private readonly bidRepository: BidRepository,
   ) {}
 
-  async execute() {
-    const user = await this.userRepository.findById('user-001');
+  async execute(userId: string) {
+    const user = await this.userRepository.findById(userId);
 
     if (!user) {
       return null;
     }
 
-    const publishedAuctions =
-      await this.auctionRepository.findBySellerId(user.id);
+    const publishedAuctions = await this.auctionRepository.findBySellerId(
+      user.id,
+    );
 
     const bids = await this.bidRepository.findByBidderId(user.id);
 
@@ -28,8 +29,7 @@ export class GetProfileUseCase {
     const participatedAuctions = [];
 
     for (const auctionId of participatedAuctionIds) {
-      const auction =
-        await this.auctionRepository.findById(auctionId);
+      const auction = await this.auctionRepository.findById(auctionId);
 
       if (auction) {
         participatedAuctions.push(auction);
