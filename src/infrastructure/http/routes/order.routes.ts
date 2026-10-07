@@ -44,18 +44,21 @@ const getSellerOrdersUseCase = new GetSellerOrdersUseCase(
   orderRepository,
 );
 
-const createPaymentUseCase = new CreatePaymentUseCase(
-  orderRepository,
-  paymentRepository,
-  paymentProvider,
-);
+const createPaymentUseCase =
+  new CreatePaymentUseCase(
+    orderRepository,
+    auctionRepository,
+    paymentRepository,
+    paymentProvider,
+  );
 
-const controller = new OrdersController(
-  getOrdersUseCase,
-  getOrderByIdUseCase,
-  getSellerOrdersUseCase,
-  createPaymentUseCase,
-);
+const controller =
+  new OrdersController(
+    getOrdersUseCase,
+    getOrderByIdUseCase,
+    getSellerOrdersUseCase,
+    createPaymentUseCase,
+  );
 
 router.get(
   '/',

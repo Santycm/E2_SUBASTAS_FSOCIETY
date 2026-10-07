@@ -1,17 +1,24 @@
 import { Types } from "mongoose";
 
 import { Payment } from "../../../../domain/entities/payment";
-import { PaymentRepository, CreatePaymentData } from "../../../../domain/ports/payment.repository";
+import {
+  PaymentRepository,
+  CreatePaymentData,
+} from "../../../../domain/ports/payment.repository";
 
-import { PaymentModel } from "../models/payment.model";
+import { PaymentModel, PaymentDocument } from "../models/payment.model";
 
 export class MongoosePaymentRepository implements PaymentRepository {
   async findById(id: string): Promise<Payment | null> {
-    if (!Types.ObjectId.isValid(id)) return null;
+    if (!Types.ObjectId.isValid(id)) {
+      return null;
+    }
 
     const payment = await PaymentModel.findById(id).lean();
 
-    if (!payment) return null;
+    if (!payment) {
+      return null;
+    }
 
     return this.toDomain(payment);
   }
@@ -19,6 +26,20 @@ export class MongoosePaymentRepository implements PaymentRepository {
   async findByOrderId(orderId: string): Promise<Payment | null> {
     const payment = await PaymentModel.findOne({
       orderId,
+    }).lean();
+
+    if (!payment) {
+      return null;
+    }
+
+    return this.toDomain(payment);
+  }
+
+  async findByExternalOrderId(
+    externalOrderId: string,
+  ): Promise<Payment | null> {
+    const payment = await PaymentModel.findOne({
+      externalOrderId,
     }).lean();
 
     if (!payment) return null;
@@ -33,7 +54,9 @@ export class MongoosePaymentRepository implements PaymentRepository {
       externalEventId,
     }).lean();
 
-    if (!payment) return null;
+    if (!payment) {
+      return null;
+    }
 
     return this.toDomain(payment);
   }
@@ -56,6 +79,7 @@ export class MongoosePaymentRepository implements PaymentRepository {
         amount: payment.amount,
         status: payment.status,
         provider: payment.provider,
+        externalOrderId: payment.externalOrderId,
         externalPaymentId: payment.externalPaymentId,
         externalEventId: payment.externalEventId,
         updatedAt: payment.updatedAt,
@@ -73,23 +97,14 @@ export class MongoosePaymentRepository implements PaymentRepository {
     return this.toDomain(updatedPayment);
   }
 
-  private toDomain(payment: {
-    _id: Types.ObjectId;
-    orderId: string;
-    amount: number;
-    status: Payment["status"];
-    provider: string;
-    externalPaymentId: string | null;
-    externalEventId: string | null;
-    createdAt: Date;
-    updatedAt: Date;
-  }): Payment {
+  private toDomain(payment: PaymentDocument): Payment {
     return {
       id: payment._id.toString(),
       orderId: payment.orderId,
       amount: payment.amount,
       status: payment.status,
       provider: payment.provider,
+      externalOrderId: payment.externalOrderId,
       externalPaymentId: payment.externalPaymentId,
       externalEventId: payment.externalEventId,
       createdAt: payment.createdAt,
