@@ -1,9 +1,10 @@
-import { Auction } from '../../../../domain/entities/auction';
-import { AuctionRepository } from '../../../../domain/ports/auction.repository';
-import { BidRepository } from '../../../../domain/ports/bid.repository';
-import { GetAuctionsDto } from './dto/get-auctions.dto';
-import { CloseAuctionUseCase } from '../close-auction/close-auction';
-import { OrderRepository } from '../../../../domain/ports/order.repository';
+import { Auction } from "../../../../domain/entities/auction";
+import { AuctionRepository } from "../../../../domain/ports/auction.repository";
+import { BidRepository } from "../../../../domain/ports/bid.repository";
+import { GetAuctionsDto } from "./dto/get-auctions.dto";
+import { CloseAuctionUseCase } from "../close-auction/close-auction";
+import { OrderRepository } from "../../../../domain/ports/order.repository";
+import { AuctionEventPublisher } from "../../../../domain/ports/auction-event.publisher";
 
 export interface GetAuctionsResult {
   data: Auction[];
@@ -22,11 +23,13 @@ export class GetAuctionsUseCase {
     private readonly auctionRepository: AuctionRepository,
     bidRepository: BidRepository,
     orderRepository: OrderRepository,
+    auctionEventPublisher: AuctionEventPublisher,
   ) {
     this.closeAuctionUseCase = new CloseAuctionUseCase(
       auctionRepository,
       bidRepository,
       orderRepository,
+      auctionEventPublisher,
     );
   }
 
@@ -42,9 +45,7 @@ export class GetAuctionsUseCase {
     });
 
     const data = await Promise.all(
-      result.data.map((auction) =>
-        this.closeAuctionUseCase.execute(auction),
-      ),
+      result.data.map((auction) => this.closeAuctionUseCase.execute(auction)),
     );
 
     const totalPages = Math.ceil(result.total / limit);

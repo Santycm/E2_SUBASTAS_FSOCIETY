@@ -1,4 +1,5 @@
 import { AuctionRepository } from '../../../../domain/ports/auction.repository';
+import { AuctionEventPublisher } from '../../../../domain/ports/auction-event.publisher';
 import { BidRepository } from '../../../../domain/ports/bid.repository';
 import { OrderRepository } from '../../../../domain/ports/order.repository';
 import { Bid } from '../../../../domain/entities/bid';
@@ -19,12 +20,14 @@ export class CreateBidUseCase {
   constructor(
     private readonly auctionRepository: AuctionRepository,
     private readonly bidRepository: BidRepository,
-    orderRepository: OrderRepository,
+    private readonly orderRepository: OrderRepository,
+    private readonly auctionEventPublisher: AuctionEventPublisher,
   ) {
     this.closeAuctionUseCase = new CloseAuctionUseCase(
       auctionRepository,
       bidRepository,
       orderRepository,
+      auctionEventPublisher,
     );
   }
 
@@ -68,6 +71,24 @@ export class CreateBidUseCase {
         currentAuction.id,
         dto.amount,
       );
+
+      this.auctionEventPublisher.publishBidPlaced({
+        auctionId: dto.auctionId,
+        bidderId: dto.bidderId,
+        amount: dto.amount,
+        currentBid: dto.amount,
+      });
+
+      if (
+        highestBid &&
+        highestBid.bidderId !== dto.bidderId
+      ) {
+        this.auctionEventPublisher.publishBidOutbid({
+          auctionId: dto.auctionId,
+          outbidBidderId: highestBid.bidderId,
+          currentBid: dto.amount,
+        });
+      }
     }
 
     return {
