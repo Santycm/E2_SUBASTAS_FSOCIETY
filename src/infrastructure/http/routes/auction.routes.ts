@@ -114,6 +114,7 @@ const createAuctionRoutes = (
   router.post(
     "/:id/bids",
     authMiddleware,
+    auctionIdValidator,
     createBidValidator,
     validationMiddleware,
     bidsController.createBid,

@@ -14,7 +14,9 @@ export const createAuctionValidator: ValidationChain[] = [
   body('categoryId')
     .trim()
     .notEmpty()
-    .withMessage('CATEGORY_ID_REQUIRED'),
+    .withMessage('CATEGORY_ID_REQUIRED')
+    .isMongoId()
+    .withMessage('CATEGORY_ID_INVALID'),
 
   body('basePrice')
     .notEmpty()
@@ -38,7 +40,7 @@ export const createAuctionValidator: ValidationChain[] = [
 export const getAuctionsValidator: ValidationChain[] = [
   query('categoryId')
     .optional()
-    .isString()
+    .isMongoId()
     .withMessage('CATEGORY_ID_INVALID'),
 
   query('status')
@@ -58,7 +60,7 @@ export const getAuctionsValidator: ValidationChain[] = [
 
   query('limit')
     .optional()
-    .isInt({ min: 1 })
+    .isInt({ min: 1, max: 100 })
     .withMessage('LIMIT_INVALID'),
 ];
 

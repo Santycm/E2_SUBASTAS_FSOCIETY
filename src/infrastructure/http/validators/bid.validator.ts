@@ -2,8 +2,9 @@ import { body, ValidationChain } from 'express-validator';
 
 export const createBidValidator: ValidationChain[] = [
   body('amount')
-    .notEmpty()
+    .exists()
     .withMessage('AMOUNT_REQUIRED')
-    .isInt({ min: 0 })
+    .bail()
+    .isInt({ min: 1 })
     .withMessage('AMOUNT_INVALID'),
 ];

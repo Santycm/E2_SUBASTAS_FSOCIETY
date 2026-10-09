@@ -35,6 +35,16 @@ export function validateAuctionCreation(
     };
   }
 
+  if (
+    Number.isNaN(createdAt.getTime()) ||
+    Number.isNaN(closesAt.getTime())
+  ) {
+    return {
+      valid: false,
+      reason: 'CLOSING_DATE_BEFORE_CREATION',
+    };
+  }
+
   if (closesAt <= createdAt) {
     return {
       valid: false,
