@@ -1,4 +1,4 @@
-import { query, body, ValidationChain } from 'express-validator';
+import { query, body, param, ValidationChain } from 'express-validator';
 
 export const createAuctionValidator: ValidationChain[] = [
   body('title')
@@ -60,4 +60,16 @@ export const getAuctionsValidator: ValidationChain[] = [
     .optional()
     .isInt({ min: 1 })
     .withMessage('LIMIT_INVALID'),
+];
+
+export const auctionIdValidator: ValidationChain[] = [
+  param('id').isMongoId().withMessage('AUCTION_ID_INVALID'),
+];
+
+export const cancelAuctionValidator: ValidationChain[] = [
+  param('id').isMongoId().withMessage('AUCTION_ID_INVALID'),
+];
+
+export const auctionBidsValidator: ValidationChain[] = [
+  param('id').isMongoId().withMessage('AUCTION_ID_INVALID'),
 ];
