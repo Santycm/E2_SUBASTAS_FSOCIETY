@@ -3,6 +3,8 @@ import { OrderRepository } from '../../../../domain/ports/order.repository';
 import { PaymentRepository } from '../../../../domain/ports/payment.repository';
 import { PaymentProvider } from '../../../../domain/ports/payment.provider';
 
+import { ApplicationError } from "../../../errors/application-error";
+
 export interface HandlePaymentWebhookInput {
   externalOrderId: string;
   eventId: string;
@@ -21,7 +23,7 @@ export class HandlePaymentWebhookUseCase {
     );
 
     if (!payment) {
-      throw new Error('PAYMENT_NOT_FOUND');
+      throw new ApplicationError('PAYMENT_NOT_FOUND', 404);
     }
 
     if (payment.status === 'APPROVED') {
@@ -31,7 +33,7 @@ export class HandlePaymentWebhookUseCase {
     const order = await this.orderRepository.findById(payment.orderId);
 
     if (!order) {
-      throw new Error('ORDER_NOT_FOUND');
+      throw new ApplicationError('ORDER_NOT_FOUND', 404);
     }
 
     if (order.status === 'PAID') {
@@ -43,15 +45,15 @@ export class HandlePaymentWebhookUseCase {
     );
 
     if (externalPayment.externalOrderId !== payment.externalOrderId) {
-      throw new Error('PAYMENT_ORDER_ID_MISMATCH');
+      throw new ApplicationError('PAYMENT_EXTERNAL_REFERENCE_MISMATCH', 400);
     }
 
     if (externalPayment.orderId !== order.id) {
-      throw new Error('PAYMENT_EXTERNAL_REFERENCE_MISMATCH');
+      throw new ApplicationError('PAYMENT_EXTERNAL_REFERENCE_MISMATCH', 400);
     }
 
     if (externalPayment.amount !== order.amount) {
-      throw new Error('PAYMENT_AMOUNT_MISMATCH');
+      throw new ApplicationError('PAYMENT_AMOUNT_MISMATCH', 400);
     }
 
     const now = new Date();
