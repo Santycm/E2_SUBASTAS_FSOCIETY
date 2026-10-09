@@ -20,7 +20,8 @@
     "express-validator": "^7.3.2",
     "jsonwebtoken": "^9.0.3",
     "mercadopago": "^3.6.1",
-    "mongoose": "^9.10.4"
+    "mongoose": "^9.10.4",
+    "socket.io": "^4.8.4"
   },
   "devDependencies": {
     "@swc/core": "^1.16.13",

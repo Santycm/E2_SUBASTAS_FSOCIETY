@@ -15,101 +15,113 @@ import { MongooseAuctionRepository } from '../../persistence/mongoose/repositori
 import { MongooseBidRepository } from '../../persistence/mongoose/repositories/mongoose-bid.repository';
 import { MongooseOrderRepository } from '../../persistence/mongoose/repositories/mongoose-order.repository';
 
+import { AuctionEventPublisher } from '../../../domain/ports/auction-event.publisher';
+
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { validationMiddleware } from '../middlewares/validation.middleware';
+
 import {
   createAuctionValidator,
   getAuctionsValidator,
 } from '../validators/auction.validator';
+
 import {
   createBidValidator,
 } from '../validators/bid.validator';
 
+const createAuctionRoutes = (
+  auctionEventPublisher: AuctionEventPublisher,
+): Router => {
+  const router: Router = Router();
 
-const router: Router = Router();
+  const auctionRepository = new MongooseAuctionRepository();
+  const bidRepository = new MongooseBidRepository();
+  const orderRepository = new MongooseOrderRepository();
 
-const auctionRepository = new MongooseAuctionRepository();
-const bidRepository = new MongooseBidRepository();
-const orderRepository = new MongooseOrderRepository();
+  const getAuctionsUseCase = new GetAuctionsUseCase(
+    auctionRepository,
+    bidRepository,
+    orderRepository,
+    auctionEventPublisher,
+  );
 
-const getAuctionsUseCase = new GetAuctionsUseCase(
-  auctionRepository,
-  bidRepository,
-  orderRepository,
-);
+  const createAuctionUseCase = new CreateAuctionUseCase(
+    auctionRepository,
+  );
 
-const createAuctionUseCase = new CreateAuctionUseCase(
-  auctionRepository,
-);
+  const getAuctionByIdUseCase = new GetAuctionByIdUseCase(
+    auctionRepository,
+    bidRepository,
+    orderRepository,
+    auctionEventPublisher,
+  );
 
-const getAuctionByIdUseCase = new GetAuctionByIdUseCase(
-  auctionRepository,
-  bidRepository,
-  orderRepository,
-);
+  const cancelAuctionUseCase = new CancelAuctionUseCase(
+    auctionRepository,
+  );
 
-const cancelAuctionUseCase = new CancelAuctionUseCase(
-  auctionRepository,
-);
+  const createBidUseCase = new CreateBidUseCase(
+    auctionRepository,
+    bidRepository,
+    orderRepository,
+    auctionEventPublisher,
+  );
 
-const createBidUseCase = new CreateBidUseCase(
-  auctionRepository,
-  bidRepository,
-  orderRepository,
-);
+  const getAuctionBidsUseCase = new GetAuctionBidsUseCase(
+    auctionRepository,
+    bidRepository,
+  );
 
-const getAuctionBidsUseCase = new GetAuctionBidsUseCase(
-  auctionRepository,
-  bidRepository,
-);
+  const auctionsController = new AuctionsController(
+    getAuctionsUseCase,
+    createAuctionUseCase,
+    getAuctionByIdUseCase,
+    cancelAuctionUseCase,
+  );
 
-const auctionsController = new AuctionsController(
-  getAuctionsUseCase,
-  createAuctionUseCase,
-  getAuctionByIdUseCase,
-  cancelAuctionUseCase,
-);
+  const bidsController = new BidsController(
+    createBidUseCase,
+    getAuctionBidsUseCase,
+  );
 
-const bidsController = new BidsController(
-  createBidUseCase,
-  getAuctionBidsUseCase,
-);
+  router.get(
+    '/',
+    getAuctionsValidator,
+    validationMiddleware,
+    auctionsController.getAuctions,
+  );
 
-router.get(
-  '/',
-  getAuctionsValidator,
-  validationMiddleware,
-  auctionsController.getAuctions,
-);
+  router.post(
+    '/',
+    authMiddleware,
+    createAuctionValidator,
+    validationMiddleware,
+    auctionsController.createAuction,
+  );
 
-router.post(
-  '/',
-  authMiddleware,
-  createAuctionValidator,
-  validationMiddleware,
-  auctionsController.createAuction,
-);
+  router.get('/:id', auctionsController.getAuctionById);
 
-router.get('/:id', auctionsController.getAuctionById);
+  router.patch(
+    '/:id/cancel',
+    authMiddleware,
+    auctionsController.cancelAuction,
+  );
 
-router.patch(
-  '/:id/cancel',
-  authMiddleware,
-  auctionsController.cancelAuction,
-);
+  router.post(
+    '/:id/bids',
+    authMiddleware,
+    createBidValidator,
+    validationMiddleware,
+    bidsController.createBid,
+  );
 
-router.post(
-  '/:id/bids',
-  authMiddleware,
-  createBidValidator,
-  validationMiddleware,
-  bidsController.createBid,
-);
+  router.get(
+    '/:id/bids',
+    authMiddleware,
+    bidsController.getAuctionBids,
+  );
 
-router.get(
-  '/:id/bids',
-  authMiddleware,
-  bidsController.getAuctionBids,
-);
+  return router;
+};
 
-export default router;
+export default createAuctionRoutes;

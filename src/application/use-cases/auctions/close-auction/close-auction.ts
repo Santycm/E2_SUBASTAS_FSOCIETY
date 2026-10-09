@@ -1,5 +1,6 @@
 import { Auction } from '../../../../domain/entities/auction';
 import { AuctionRepository } from '../../../../domain/ports/auction.repository';
+import { AuctionEventPublisher } from '../../../../domain/ports/auction-event.publisher';
 import { BidRepository } from '../../../../domain/ports/bid.repository';
 import { OrderRepository } from '../../../../domain/ports/order.repository';
 import { calculateOrderExpiration } from '../../../../domain/rules/order.rules';
@@ -9,6 +10,7 @@ export class CloseAuctionUseCase {
     private readonly auctionRepository: AuctionRepository,
     private readonly bidRepository: BidRepository,
     private readonly orderRepository: OrderRepository,
+    private readonly auctionEventPublisher: AuctionEventPublisher,
   ) {}
 
   async execute(auction: Auction): Promise<Auction> {
@@ -26,10 +28,18 @@ export class CloseAuctionUseCase {
       );
 
     if (!highestBid) {
-      return this.auctionRepository.updateStatus(
-        auction.id,
-        'NO_BIDS',
-      );
+      const closedAuction =
+        await this.auctionRepository.updateStatus(
+          auction.id,
+          'NO_BIDS',
+        );
+
+      this.auctionEventPublisher.publishAuctionClosed({
+        auctionId: auction.id,
+        status: 'NO_BIDS',
+      });
+
+      return closedAuction;
     }
 
     const closedAuction =
@@ -55,6 +65,12 @@ export class CloseAuctionUseCase {
         expiresAt: calculateOrderExpiration(createdAt),
       });
     }
+
+    this.auctionEventPublisher.publishAuctionClosed({
+      auctionId: auction.id,
+      status: 'CLOSED',
+      winnerId: highestBid.bidderId,
+    });
 
     return closedAuction;
   }
