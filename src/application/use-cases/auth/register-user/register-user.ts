@@ -2,6 +2,7 @@ import { UserRepository } from '../../../../domain/ports/user.repository';
 import { PasswordHasher } from '../../../../domain/ports/password-hasher';
 
 import { RegisterUserDto } from './dto/register-user.dto';
+import { ApplicationError } from "../../../errors/application-error";
 
 export class RegisterUserUseCase {
   constructor(
@@ -14,7 +15,7 @@ export class RegisterUserUseCase {
       await this.userRepository.findByEmail(input.email);
 
     if (existingUser) {
-      throw new Error('USER_ALREADY_EXISTS');
+      throw new ApplicationError('EMAIL_ALREADY_EXISTS', 409);
     }
 
     const hashedPassword =
