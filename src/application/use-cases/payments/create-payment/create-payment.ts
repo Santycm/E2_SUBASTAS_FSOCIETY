@@ -35,7 +35,7 @@ export class CreatePaymentUseCase {
     }
 
     if (order.status !== "PENDING") {
-      throw new ApplicationError("ORDER_NOT_PENDING", 40);
+      throw new ApplicationError("ORDER_NOT_PENDING", 409);
     }
 
     const existingPayment = await this.paymentRepository.findByOrderId(
