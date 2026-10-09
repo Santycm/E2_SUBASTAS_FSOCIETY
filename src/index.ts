@@ -1,3 +1,4 @@
+
 import "dotenv/config";
 
 import http from "http";
@@ -7,6 +8,7 @@ import app from "./app";
 import { connectMongoDB } from "./infrastructure/persistence/mongoose/connection";
 import { registerRoutes } from "./infrastructure/http/routes";
 import { SocketIoAuctionEventPublisher } from "./infrastructure/realtime/auction-event.publisher";
+import { configureSocketServer } from "./infrastructure/realtime/socket-server";
 
 const PORT = Number(process.env.PORT) || 3000;
 
@@ -21,30 +23,7 @@ const bootstrap = async (): Promise<void> => {
     },
   });
 
-  io.on("connection", (socket) => {
-    console.log(`[Socket.IO] connected: ${socket.id}`);
-
-    socket.on("JOIN_AUCTION", (auctionId: string) => {
-      const room = `auction:${auctionId}`;
-
-      socket.join(room);
-
-      socket.emit("JOINED_AUCTION", {
-        auctionId,
-        room,
-      });
-    });
-
-    socket.on("LEAVE_AUCTION", (auctionId: string) => {
-      socket.leave(`auction:${auctionId}`);
-    });
-
-    socket.on("disconnect", (reason) => {
-      console.log(
-        `[Socket.IO] disconnected: ${socket.id} (${reason})`,
-      );
-    });
-  });
+  configureSocketServer(io);
 
   const auctionEventPublisher = new SocketIoAuctionEventPublisher(io);
 
