@@ -3,6 +3,8 @@ import { AuctionRepository } from "../../../../domain/ports/auction.repository";
 import { PaymentRepository } from "../../../../domain/ports/payment.repository";
 import { PaymentProvider } from "../../../../domain/ports/payment.provider";
 
+import { ApplicationError } from "../../../errors/application-error";
+
 export interface CreatePaymentDto {
   orderId: string;
   buyerId: string;
@@ -25,15 +27,15 @@ export class CreatePaymentUseCase {
     const order = await this.orderRepository.findById(dto.orderId);
 
     if (!order) {
-      throw new Error("ORDER_NOT_FOUND");
+      throw new ApplicationError("ORDER_NOT_FOUND", 404);
     }
 
     if (order.buyerId !== dto.buyerId) {
-      throw new Error("ORDER_NOT_FOUND");
+      throw new ApplicationError("ORDER_NOT_FOUND", 404);
     }
 
     if (order.status !== "PENDING") {
-      throw new Error("ORDER_NOT_PENDING");
+      throw new ApplicationError("ORDER_NOT_PENDING", 409);
     }
 
     const existingPayment = await this.paymentRepository.findByOrderId(
@@ -42,11 +44,11 @@ export class CreatePaymentUseCase {
 
     if (existingPayment) {
       if (existingPayment.status === "APPROVED") {
-        throw new Error("ORDER_ALREADY_PAID");
+        throw new ApplicationError("PAYMENT_ALREADY_APPROVED", 409);
       }
 
       if (existingPayment.status === "PENDING") {
-        throw new Error("PAYMENT_ALREADY_EXISTS");
+        throw new ApplicationError("PAYMENT_ALREADY_PENDING", 409);
       }
     }
 
@@ -56,13 +58,13 @@ export class CreatePaymentUseCase {
         status: "EXPIRED",
       });
 
-      throw new Error("ORDER_EXPIRED");
+      throw new ApplicationError("ORDER_EXPIRED", 409);
     }
 
     const auction = await this.auctionRepository.findById(order.auctionId);
 
     if (!auction) {
-      throw new Error("AUCTION_NOT_FOUND");
+      throw new ApplicationError("AUCTION_NOT_FOUND", 404);
     }
 
     const externalPayment = await this.paymentProvider.createPayment({

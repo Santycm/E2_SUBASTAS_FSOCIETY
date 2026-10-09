@@ -11,7 +11,14 @@ import { CreatePaymentUseCase } from '../../../application/use-cases/payments/cr
 
 import { OrdersController } from '../controllers/order.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
+import { validationMiddleware } from '../middlewares/validation.middleware';
 import { MercadoPagoProvider } from '../../payments/mercadopago/mercado-pago.provider';
+
+import {
+  getOrdersValidator,
+  getSellerOrdersValidator,
+  orderIdValidator,
+} from '../validators/order.validator';
 
 const router: Router = Router();
 
@@ -44,45 +51,50 @@ const getSellerOrdersUseCase = new GetSellerOrdersUseCase(
   orderRepository,
 );
 
-const createPaymentUseCase =
-  new CreatePaymentUseCase(
-    orderRepository,
-    auctionRepository,
-    paymentRepository,
-    paymentProvider,
-  );
+const createPaymentUseCase = new CreatePaymentUseCase(
+  orderRepository,
+  auctionRepository,
+  paymentRepository,
+  paymentProvider,
+);
 
-const controller =
-  new OrdersController(
-    getOrdersUseCase,
-    getOrderByIdUseCase,
-    getSellerOrdersUseCase,
-    createPaymentUseCase,
-  );
+const controller = new OrdersController(
+  getOrdersUseCase,
+  getOrderByIdUseCase,
+  getSellerOrdersUseCase,
+  createPaymentUseCase,
+);
 
 router.get(
   '/',
   authMiddleware,
+  getOrdersValidator,
+  validationMiddleware,
   controller.getOrders,
 );
 
 router.get(
   '/sales',
   authMiddleware,
+  getSellerOrdersValidator,
+  validationMiddleware,
   controller.getSellerOrders,
 );
 
 router.post(
   '/:id/payment',
   authMiddleware,
+  orderIdValidator,
+  validationMiddleware,
   controller.createPayment,
 );
 
 router.get(
   '/:id',
   authMiddleware,
+  orderIdValidator,
+  validationMiddleware,
   controller.getOrder,
 );
-
 
 export default router;

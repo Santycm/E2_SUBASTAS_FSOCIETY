@@ -1,4 +1,4 @@
-import { body } from 'express-validator';
+import { body, param, ValidationChain } from 'express-validator';
 
 export const createCategoryValidator = [
   body('name')
@@ -14,4 +14,8 @@ export const createCategoryValidator = [
     .trim()
     .notEmpty()
     .withMessage('CATEGORY_DESCRIPTION_REQUIRED'),
+];
+
+export const categoryIdValidator: ValidationChain[] = [
+  param('id').isMongoId().withMessage('CATEGORY_ID_INVALID'),
 ];

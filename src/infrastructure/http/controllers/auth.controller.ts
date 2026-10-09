@@ -10,23 +10,9 @@ export class AuthController {
   ) {}
 
   register = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const result = await this.registerUserUseCase.execute(req.body);
+    const result = await this.registerUserUseCase.execute(req.body);
 
-      res.status(201).json(result);
-    } catch (error) {
-      if (error instanceof Error && error.message === "USER_ALREADY_EXISTS") {
-        res.status(409).json({
-          message: "USER_ALREADY_EXISTS",
-        });
-
-        return;
-      }
-      
-      res.status(500).json({
-        message: "INTERNAL_SERVER_ERROR",
-      });
-    }
+    res.status(201).json(result);
   };
 
   login = async (req: Request, res: Response): Promise<void> => {

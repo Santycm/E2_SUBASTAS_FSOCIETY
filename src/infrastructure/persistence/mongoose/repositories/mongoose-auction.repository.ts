@@ -13,6 +13,8 @@ import {
   AuctionModel,
 } from '../models/auction.model';
 
+import { ApplicationError } from '../../../../application/errors/application-error';
+
 export class MongooseAuctionRepository implements AuctionRepository {
   async findAll(
     filters: FindAuctionsFilters,
@@ -87,7 +89,7 @@ export class MongooseAuctionRepository implements AuctionRepository {
     status: Auction['status'],
   ): Promise<Auction> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new Error('INVALID_AUCTION_ID');
+      throw new ApplicationError('INVALID_AUCTION_ID', 400);
     }
 
     const updatedAuction = await AuctionModel.findByIdAndUpdate(
@@ -102,7 +104,7 @@ export class MongooseAuctionRepository implements AuctionRepository {
     ).lean();
 
     if (!updatedAuction) {
-      throw new Error('AUCTION_NOT_FOUND');
+      throw new ApplicationError('AUCTION_NOT_FOUND', 404);
     }
 
     return this.toDomain(updatedAuction);
@@ -113,7 +115,7 @@ export class MongooseAuctionRepository implements AuctionRepository {
     currentBid: number,
   ): Promise<Auction> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new Error('INVALID_AUCTION_ID');
+      throw new ApplicationError('INVALID_AUCTION_ID', 400);
     }
 
     const updatedAuction = await AuctionModel.findByIdAndUpdate(
@@ -126,7 +128,7 @@ export class MongooseAuctionRepository implements AuctionRepository {
     ).lean();
 
     if (!updatedAuction) {
-      throw new Error('AUCTION_NOT_FOUND');
+      throw new ApplicationError('AUCTION_NOT_FOUND', 404);
     }
 
     return this.toDomain(updatedAuction);

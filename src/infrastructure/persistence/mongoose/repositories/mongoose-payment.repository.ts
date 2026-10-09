@@ -11,6 +11,8 @@ import {
   PaymentModel,
 } from '../models/payment.model';
 
+import { ApplicationError } from '../../../../application/errors/application-error';
+
 export class MongoosePaymentRepository implements PaymentRepository {
   async findById(id: string): Promise<Payment | null> {
     if (!Types.ObjectId.isValid(id)) {
@@ -80,7 +82,7 @@ export class MongoosePaymentRepository implements PaymentRepository {
 
   async update(payment: Payment): Promise<Payment> {
     if (!Types.ObjectId.isValid(payment.id)) {
-      throw new Error('INVALID_PAYMENT_ID');
+      throw new ApplicationError('INVALID_PAYMENT_ID', 400);
     }
 
     const updatedPayment = await PaymentModel.findByIdAndUpdate(
@@ -102,7 +104,7 @@ export class MongoosePaymentRepository implements PaymentRepository {
     ).lean();
 
     if (!updatedPayment) {
-      throw new Error('PAYMENT_NOT_FOUND');
+      throw new ApplicationError('PAYMENT_NOT_FOUND', 404);
     }
 
     return this.toDomain(updatedPayment);

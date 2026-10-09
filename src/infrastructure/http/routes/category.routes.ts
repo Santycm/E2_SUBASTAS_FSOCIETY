@@ -7,7 +7,7 @@ import { GetCategoryByIdUseCase } from '../../../application/use-cases/categorie
 import { CategoriesController } from '../controllers/category.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { validationMiddleware } from '../middlewares/validation.middleware';
-import { createCategoryValidator } from '../validators/category.validator';
+import { categoryIdValidator, createCategoryValidator } from '../validators/category.validator';
 
 import { MongooseCategoryRepository } from '../../persistence/mongoose/repositories/mongoose-category.repository';
 
@@ -35,7 +35,12 @@ const controller = new CategoriesController(
 
 router.get('/', controller.getCategories);
 
-router.get('/:id', controller.getCategoryById);
+router.get(
+  '/:id',
+  categoryIdValidator,
+  validationMiddleware,
+  controller.getCategoryById,
+);
 
 router.post(
   '/',

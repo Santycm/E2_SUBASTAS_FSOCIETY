@@ -2,6 +2,7 @@ import { Auction } from '../../../../domain/entities/auction';
 import { AuctionRepository } from '../../../../domain/ports/auction.repository';
 import { validateAuctionCreation } from '../../../../domain/rules/auction.rules';
 import { CreateAuctionDto } from './dto/create-auction.dto';
+import { ApplicationError } from "../../../errors/application-error";
 
 export class CreateAuctionUseCase {
   constructor(
@@ -20,7 +21,7 @@ export class CreateAuctionUseCase {
     );
 
     if (!validation.valid) {
-      throw new Error(validation.reason!);
+      throw new ApplicationError(validation.reason!, 400);
     }
 
     return this.auctionRepository.save({

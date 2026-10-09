@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 
+import { ApplicationError } from "../../application/errors/application-error";
 import { TokenService } from "../../domain/ports/token-service";
 
 export class JwtTokenService implements TokenService {
@@ -28,36 +29,34 @@ export class JwtTokenService implements TokenService {
         issuer: this.issuer,
         audience: this.audience,
       });
-    } catch (error) {
-      console.error("[JwtTokenService] Error generating token:", error);
-
-      throw new Error("TOKEN_GENERATION_FAILED");
+    } catch {
+      throw new ApplicationError("TOKEN_GENERATION_FAILED", 500);
     }
   }
 
   verify(token: string): { userId: string } {
+    let payload: string | jwt.JwtPayload;
+
     try {
-      const payload = jwt.verify(token, this.secret, {
+      payload = jwt.verify(token, this.secret, {
         algorithms: ["HS256"],
         issuer: this.issuer,
         audience: this.audience,
       });
-
-      if (
-        typeof payload !== "object" ||
-        payload === null ||
-        typeof payload.userId !== "string"
-      ) {
-        throw new Error("INVALID_TOKEN");
-      }
-
-      return {
-        userId: payload.userId,
-      };
-    } catch (error) {
-      console.error("[JwtTokenService] Error verifying token:", error);
-
-      throw new Error("INVALID_TOKEN");
+    } catch {
+      throw new ApplicationError("INVALID_TOKEN", 401);
     }
+
+    if (
+      typeof payload !== "object" ||
+      payload === null ||
+      typeof payload.userId !== "string"
+    ) {
+      throw new ApplicationError("INVALID_TOKEN", 401);
+    }
+
+    return {
+      userId: payload.userId,
+    };
   }
 }

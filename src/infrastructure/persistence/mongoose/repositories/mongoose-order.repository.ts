@@ -10,6 +10,8 @@ import {
 
 import { OrderModel } from '../models/order.model';
 
+import { ApplicationError } from '../../../../application/errors/application-error';
+
 export class MongooseOrderRepository implements OrderRepository {
   async findById(id: string): Promise<Order | null> {
     if (!Types.ObjectId.isValid(id)) {
@@ -144,7 +146,7 @@ export class MongooseOrderRepository implements OrderRepository {
 
   async update(order: Order): Promise<Order> {
     if (!Types.ObjectId.isValid(order.id)) {
-      throw new Error('INVALID_ORDER_ID');
+      throw new ApplicationError('INVALID_ORDER_ID', 400);
     }
 
     const updatedOrder = await OrderModel.findByIdAndUpdate(
@@ -164,7 +166,7 @@ export class MongooseOrderRepository implements OrderRepository {
     ).lean();
 
     if (!updatedOrder) {
-      throw new Error('ORDER_NOT_FOUND');
+      throw new ApplicationError('ORDER_NOT_FOUND', 404);
     }
 
     return this.toDomain(updatedOrder);

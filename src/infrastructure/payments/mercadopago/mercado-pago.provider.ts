@@ -1,6 +1,8 @@
+
 import { randomUUID } from 'crypto';
 import { MercadoPagoConfig, Order } from 'mercadopago';
 
+import { ApplicationError } from '../../../application/errors/application-error';
 import {
   CreateExternalPaymentInput,
   CreateExternalPaymentResult,
@@ -22,62 +24,63 @@ export class MercadoPagoProvider implements PaymentProvider {
   ): Promise<CreateExternalPaymentResult> {
     const orderClient = new Order(this.client);
 
-    try {
-      const body = {
-        type: 'online',
-        processing_mode: 'manual',
-        total_amount: String(input.amount),
-        external_reference: input.orderId,
-        payer: {
-          email: 'test@testuser.com',
+    const body = {
+      type: 'online',
+      processing_mode: 'manual',
+      total_amount: String(input.amount),
+      external_reference: input.orderId,
+      payer: {
+        email: 'test@testuser.com',
+      },
+      items: [
+        {
+          title: input.title,
+          quantity: 1,
+          unit_price: String(input.amount),
         },
-        items: [
-          {
-            title: input.title,
-            quantity: 1,
-            unit_price: String(input.amount),
-          },
-        ],
-      };
+      ],
+    };
 
-      const response = await orderClient.create({
+    let response;
+
+    try {
+      response = await orderClient.create({
         body,
         requestOptions: {
           idempotencyKey: randomUUID(),
         },
       });
+    } catch {
+      console.error('[MercadoPago] Failed to create external order');
 
-      if (!response.id) {
-        throw new Error(
-          'MERCADOPAGO_ORDER_CREATION_FAILED',
-        );
-      }
-
-      if (!response.checkout_url) {
-        throw new Error(
-          'MERCADOPAGO_CHECKOUT_URL_NOT_FOUND',
-        );
-      }
-
-      return {
-        externalOrderId: String(response.id),
-        checkoutUrl: response.checkout_url,
-      };
-    } catch (error) {
-      console.error(
-        '========== MERCADO PAGO ERROR ==========',
+      throw new ApplicationError(
+        'MERCADOPAGO_REQUEST_FAILED',
+        503,
       );
-
-      console.dir(error, {
-        depth: null,
-      });
-
-      console.error(
-        '========================================',
-      );
-
-      throw error;
     }
+
+    if (!response.id) {
+      console.error('[MercadoPago] External order response has no ID');
+
+      throw new ApplicationError(
+        'MERCADOPAGO_ORDER_CREATION_FAILED',
+        503,
+      );
+    }
+
+    if (!response.checkout_url) {
+      console.error('[MercadoPago] External order response has no checkout URL');
+
+      throw new ApplicationError(
+        'MERCADOPAGO_CHECKOUT_URL_NOT_FOUND',
+        503,
+      );
+    }
+
+    return {
+      externalOrderId: String(response.id),
+      checkoutUrl: response.checkout_url,
+    };
   }
 
   async getPayment(
@@ -85,13 +88,25 @@ export class MercadoPagoProvider implements PaymentProvider {
   ): Promise<ExternalPayment> {
     const orderClient = new Order(this.client);
 
-    const response = await orderClient.get({
-      id: externalOrderId,
-    });
+    let response;
+
+    try {
+      response = await orderClient.get({
+        id: externalOrderId,
+      });
+    } catch {
+      console.error('[MercadoPago] Failed to retrieve external order');
+
+      throw new ApplicationError(
+        'MERCADOPAGO_REQUEST_FAILED',
+        503,
+      );
+    }
 
     if (!response.id) {
-      throw new Error(
+      throw new ApplicationError(
         'MERCADOPAGO_ORDER_NOT_FOUND',
+        503,
       );
     }
 
@@ -99,8 +114,9 @@ export class MercadoPagoProvider implements PaymentProvider {
       response.transactions?.payments?.[0];
 
     if (!transactionPayment) {
-      throw new Error(
+      throw new ApplicationError(
         'MERCADOPAGO_PAYMENT_NOT_FOUND',
+        503,
       );
     }
 
