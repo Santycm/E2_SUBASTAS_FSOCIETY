@@ -1,0 +1,235 @@
+
+Category:
+  type: object
+  required:
+    - id
+    - name
+    - description
+  properties:
+    id:
+      type: string
+      example: "507f1f77bcf86cd799439011"
+    name:
+      type: string
+      example: "Electrónica"
+    description:
+      type: string
+      example: "Equipos y dispositivos electrónicos"
+
+Auction:
+  type: object
+  required:
+    - id
+    - title
+    - description
+    - categoryId
+    - sellerId
+    - basePrice
+    - minimumIncrement
+    - currentBid
+    - status
+    - closesAt
+    - createdAt
+  properties:
+    id:
+      type: string
+      example: "507f1f77bcf86cd799439012"
+    title:
+      type: string
+      example: "Portátil gaming"
+    description:
+      type: string
+      example: "Portátil en buen estado"
+    categoryId:
+      type: string
+      example: "507f1f77bcf86cd799439011"
+    sellerId:
+      type: string
+      example: "507f1f77bcf86cd799439013"
+    basePrice:
+      type: integer
+      example: 1500000
+    minimumIncrement:
+      type: integer
+      example: 50000
+    currentBid:
+      type: integer
+      nullable: true
+      example: 1550000
+    status:
+      type: string
+      enum: [OPEN, CLOSED, CANCELLED, NO_BIDS]
+      example: OPEN
+    closesAt:
+      type: string
+      format: date-time
+      example: "2026-11-20T18:00:00.000Z"
+    createdAt:
+      type: string
+      format: date-time
+      example: "2026-10-20T18:00:00.000Z"
+
+Bid:
+  type: object
+  required:
+    - id
+    - auctionId
+    - bidderId
+    - amount
+    - status
+    - rejectionReason
+    - createdAt
+  properties:
+    id:
+      type: string
+      example: "507f1f77bcf86cd799439014"
+    auctionId:
+      type: string
+    bidderId:
+      type: string
+    amount:
+      type: integer
+      example: 1600000
+    status:
+      type: string
+      enum: [ACCEPTED, REJECTED]
+    rejectionReason:
+      type: string
+      nullable: true
+      enum:
+        - AUCTION_NOT_OPEN
+        - AUCTION_CLOSED
+        - SELLER_CANNOT_BID
+        - LEADING_BIDDER_CANNOT_OUTBID_SELF
+        - AMOUNT_BELOW_MINIMUM
+        - AUCTION_CANCELLED
+        - INVALID_AMOUNT
+      example: null
+    createdAt:
+      type: string
+      format: date-time
+
+BidResult:
+  type: object
+  required:
+    - bid
+    - auctionId
+    - bidderId
+    - currentBid
+  properties:
+    bid:
+      $ref: "#/components/schemas/Bid"
+    auctionId:
+      type: string
+    bidderId:
+      type: string
+    currentBid:
+      type: integer
+      nullable: true
+      example: 1600000
+
+Order:
+  type: object
+  required:
+    - id
+    - auctionId
+    - buyerId
+    - amount
+    - status
+    - createdAt
+    - expiresAt
+  properties:
+    id:
+      type: string
+      example: "507f1f77bcf86cd799439015"
+    auctionId:
+      type: string
+    buyerId:
+      type: string
+    amount:
+      type: integer
+      example: 1600000
+    status:
+      type: string
+      enum: [PENDING, PAID, EXPIRED]
+    createdAt:
+      type: string
+      format: date-time
+    expiresAt:
+      type: string
+      format: date-time
+
+PaymentCheckout:
+  type: object
+  required:
+    - paymentId
+    - checkoutUrl
+  properties:
+    paymentId:
+      type: string
+      example: "507f1f77bcf86cd799439016"
+    checkoutUrl:
+      type: string
+      format: uri
+      example: "https://www.mercadopago.com/checkout/..."
+
+Pagination:
+  type: object
+  required:
+    - page
+    - limit
+    - total
+    - totalPages
+  properties:
+    page:
+      type: integer
+      example: 1
+    limit:
+      type: integer
+      example: 10
+    total:
+      type: integer
+      example: 25
+    totalPages:
+      type: integer
+      example: 3
+
+AuctionList:
+  type: object
+  required:
+    - data
+    - pagination
+  properties:
+    data:
+      type: array
+      items:
+        $ref: "#/components/schemas/Auction"
+    pagination:
+      $ref: "#/components/schemas/Pagination"
+
+OrderList:
+  type: object
+  required:
+    - data
+    - pagination
+  properties:
+    data:
+      type: array
+      items:
+        $ref: "#/components/schemas/Order"
+    pagination:
+      $ref: "#/components/schemas/Pagination"
+
+ErrorResponse:
+  type: object
+  properties:
+    message:
+      type: string
+      example: "RESOURCE_NOT_FOUND"
+
+WebhookErrorResponse:
+  type: object
+  properties:
+    error:
+      type: string
+      example: "INVALID_SIGNATURE"

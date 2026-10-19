@@ -1,4 +1,3 @@
-
 import fs from "node:fs";
 import path from "node:path";
 import express from "express";
@@ -8,29 +7,40 @@ import YAML from "yaml";
 const docsDirectory = path.join(__dirname);
 const openApiFile = path.join(docsDirectory, "openapi.yaml");
 
-function loadOpenApiDocument() {
-  const document = YAML.parse(fs.readFileSync(openApiFile, "utf8"));
+function parseYamlFile(filePath: string) {
+  try {
+    return YAML.parse(fs.readFileSync(filePath, "utf8"));
+  } catch (error) {
+    console.error(`Error al procesar el archivo YAML: ${filePath}`);
+    throw error;
+  }
+}
 
-  const pathFiles = fs.readdirSync(path.join(docsDirectory, "paths"))
+function loadOpenApiDocument() {
+  const document = parseYamlFile(openApiFile);
+
+  const pathFiles = fs
+    .readdirSync(path.join(docsDirectory, "paths"))
     .filter((file) => file.endsWith(".yaml"));
 
   for (const file of pathFiles) {
-    const content = YAML.parse(
-      fs.readFileSync(path.join(docsDirectory, "paths", file), "utf8"),
+    const content = parseYamlFile(
+      path.join(docsDirectory, "paths", file),
     );
 
     Object.assign(document.paths, content);
   }
 
-  const schemaFiles = fs.readdirSync(path.join(docsDirectory, "schemas"))
+  const schemaFiles = fs
+    .readdirSync(path.join(docsDirectory, "schemas"))
     .filter((file) => file.endsWith(".yaml"));
 
   document.components ??= {};
   document.components.schemas ??= {};
 
   for (const file of schemaFiles) {
-    const content = YAML.parse(
-      fs.readFileSync(path.join(docsDirectory, "schemas", file), "utf8"),
+    const content = parseYamlFile(
+      path.join(docsDirectory, "schemas", file),
     );
 
     Object.assign(document.components.schemas, content);
@@ -43,8 +53,12 @@ export const swaggerDocument = loadOpenApiDocument();
 
 export const swaggerRouter = express.Router();
 
-swaggerRouter.use("/", swaggerUi.serve);
-swaggerRouter.get("/", swaggerUi.setup(swaggerDocument));
 swaggerRouter.get("/openapi.json", (_req, res) => {
   res.json(swaggerDocument);
 });
+
+swaggerRouter.use(
+  "/",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument),
+);

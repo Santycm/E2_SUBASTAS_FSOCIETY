@@ -1,3 +1,4 @@
+
 /api/v1/auth/register:
   post:
     tags:
@@ -9,11 +10,25 @@
         application/json:
           schema:
             $ref: "#/components/schemas/RegisterUserRequest"
+          example:
+            name: "Santiago Castaño"
+            email: "usuario@example.com"
+            password: "ClaveSegura123"
     responses:
       "201":
-        description: Usuario registrado correctamente
+        description: Usuario registrado correctamente.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisteredUser"
       "400":
-        description: Datos de entrada inválidos
+        description: Datos de entrada inválidos.
+      "409":
+        description: El correo electrónico ya está registrado.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
 
 /api/v1/auth/login:
   post:
@@ -26,10 +41,21 @@
         application/json:
           schema:
             $ref: "#/components/schemas/LoginRequest"
+          example:
+            email: "usuario@example.com"
+            password: "ClaveSegura123"
     responses:
       "200":
-        description: Inicio de sesión exitoso
+        description: Inicio de sesión exitoso.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthResponse"
       "400":
-        description: Datos de entrada inválidos
+        description: Datos de entrada inválidos.
       "401":
-        description: Credenciales inválidas
+        description: Credenciales inválidas.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErrorResponse"
