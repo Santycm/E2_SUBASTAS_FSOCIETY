@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
-import { MongooseOrderRepository } from '../../persistence/mongoose/repositories/mongoose-order.repository';
 import { MongoosePaymentRepository } from '../../persistence/mongoose/repositories/mongoose-payment.repository';
+import { MongoosePaymentSettlementRepository } from '../../persistence/mongoose/repositories/mongoose-payment-settlement.repository';
 
 import { HandlePaymentWebhookUseCase } from '../../../application/use-cases/payments/handle-payment-webhook/handle-payment-webhook';
 
@@ -11,8 +11,9 @@ import { MercadoPagoProvider } from '../../payments/mercadopago/mercado-pago.pro
 
 const router: Router = Router();
 
-const orderRepository = new MongooseOrderRepository();
 const paymentRepository = new MongoosePaymentRepository();
+const paymentSettlementRepository =
+  new MongoosePaymentSettlementRepository();
 
 const mercadoPagoAccessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
 
@@ -27,7 +28,7 @@ const paymentProvider = new MercadoPagoProvider(
 const handlePaymentWebhookUseCase =
   new HandlePaymentWebhookUseCase(
     paymentRepository,
-    orderRepository,
+    paymentSettlementRepository,
     paymentProvider,
   );
 
@@ -40,7 +41,7 @@ if (!mercadoPagoWebhookSecret) {
 
 const controller = new PaymentController(
   handlePaymentWebhookUseCase,
-  process.env.MERCADOPAGO_WEBHOOK_SECRET ?? '',
+  mercadoPagoWebhookSecret,
   process.env.ALLOW_UNVERIFIED_WEBHOOK_RECONCILIATION === 'true',
 );
 
