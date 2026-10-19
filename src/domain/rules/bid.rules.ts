@@ -1,3 +1,4 @@
+
 import { Auction } from '../entities/auction';
 import { BidRejectionReason } from '../entities/bid';
 
@@ -12,6 +13,13 @@ export function validateBid(
   amount: number,
   currentBidderId: string | null,
 ): BidValidationResult {
+  if (!Number.isSafeInteger(amount) || amount <= 0) {
+    return {
+      valid: false,
+      reason: 'INVALID_AMOUNT',
+    };
+  }
+
   if (auction.status === 'CANCELLED') {
     return {
       valid: false,
@@ -64,4 +72,3 @@ export function validateBid(
     reason: null,
   };
 }
-
