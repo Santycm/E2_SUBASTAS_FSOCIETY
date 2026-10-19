@@ -1,0 +1,42 @@
+openapi: 3.0.3
+
+info:
+  title: Plataforma de Subastas en Línea API
+  version: 1.0.0
+  description: API REST de la Plataforma de Subastas en Línea.
+
+servers:
+  - url: /
+    description: Servidor actual
+
+tags:
+  - name: Health
+  - name: Autenticación
+  - name: Categorías
+  - name: Subastas
+  - name: Ofertas
+  - name: Órdenes
+  - name: Usuarios
+  - name: Pagos
+
+paths: {}
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+
+    WebhookErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
