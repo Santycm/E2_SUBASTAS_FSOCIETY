@@ -1,9 +1,7 @@
-import { Payment } from '../../../../domain/entities/payment';
-import { OrderRepository } from '../../../../domain/ports/order.repository';
 import { PaymentRepository } from '../../../../domain/ports/payment.repository';
 import { PaymentProvider } from '../../../../domain/ports/payment.provider';
-
-import { ApplicationError } from "../../../errors/application-error";
+import { PaymentSettlementRepository } from '../../../../domain/ports/payment-settlement.repository';
+import { ApplicationError } from '../../../errors/application-error';
 
 export interface HandlePaymentWebhookInput {
   externalOrderId: string;
@@ -13,7 +11,7 @@ export interface HandlePaymentWebhookInput {
 export class HandlePaymentWebhookUseCase {
   constructor(
     private readonly paymentRepository: PaymentRepository,
-    private readonly orderRepository: OrderRepository,
+    private readonly paymentSettlementRepository: PaymentSettlementRepository,
     private readonly paymentProvider: PaymentProvider,
   ) {}
 
@@ -26,17 +24,7 @@ export class HandlePaymentWebhookUseCase {
       throw new ApplicationError('PAYMENT_NOT_FOUND', 404);
     }
 
-    if (payment.status === 'APPROVED') {
-      return;
-    }
-
-    const order = await this.orderRepository.findById(payment.orderId);
-
-    if (!order) {
-      throw new ApplicationError('ORDER_NOT_FOUND', 404);
-    }
-
-    if (order.status === 'PAID') {
+    if (payment.status !== 'PENDING') {
       return;
     }
 
@@ -48,47 +36,39 @@ export class HandlePaymentWebhookUseCase {
       throw new ApplicationError('PAYMENT_EXTERNAL_REFERENCE_MISMATCH', 400);
     }
 
-    if (externalPayment.orderId !== order.id) {
+    if (externalPayment.orderId !== payment.orderId) {
       throw new ApplicationError('PAYMENT_EXTERNAL_REFERENCE_MISMATCH', 400);
     }
 
-    if (externalPayment.amount !== order.amount) {
+    if (externalPayment.amount !== payment.amount) {
       throw new ApplicationError('PAYMENT_AMOUNT_MISMATCH', 400);
     }
 
-    const now = new Date();
+    let status:
+      | 'APPROVED'
+      | 'REJECTED'
+      | 'CANCELLED'
+      | null = null;
 
-    const isApproved = externalPayment.status === 'processed';
-    const isRejected = externalPayment.status === 'failed';
-    const isCancelled = externalPayment.status === 'canceled';
+    if (externalPayment.status === 'processed') {
+      status = 'APPROVED';
+    } else if (externalPayment.status === 'failed') {
+      status = 'REJECTED';
+    } else if (externalPayment.status === 'canceled') {
+      status = 'CANCELLED';
+    }
 
-    if (!isApproved && !isRejected && !isCancelled) {
+    if (!status) {
       return;
     }
 
-    let paymentStatus: Payment['status'] = payment.status;
-
-    if (isApproved) {
-      paymentStatus = 'APPROVED';
-    } else if (isRejected) {
-      paymentStatus = 'REJECTED';
-    } else if (isCancelled) {
-      paymentStatus = 'CANCELLED';
-    }
-
-    await this.paymentRepository.update({
-      ...payment,
-      status: paymentStatus,
+    await this.paymentSettlementRepository.settle({
+      paymentId: payment.id,
+      orderId: payment.orderId,
       externalPaymentId: externalPayment.id,
       externalEventId: input.eventId,
-      updatedAt: now,
+      status,
+      updatedAt: new Date(),
     });
-
-    if (isApproved) {
-      await this.orderRepository.update({
-        ...order,
-        status: 'PAID',
-      });
-    }
   }
 }

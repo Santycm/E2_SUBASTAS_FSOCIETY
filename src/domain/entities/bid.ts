@@ -6,7 +6,8 @@ export type BidRejectionReason =
   | 'SELLER_CANNOT_BID'
   | 'LEADING_BIDDER_CANNOT_OUTBID_SELF'
   | 'AMOUNT_BELOW_MINIMUM'
-  | 'AUCTION_CANCELLED';
+  | 'AUCTION_CANCELLED'
+  | 'INVALID_AMOUNT';
 
 export interface Bid {
   id: string;
