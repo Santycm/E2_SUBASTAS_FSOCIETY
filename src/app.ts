@@ -1,13 +1,17 @@
-import express, { Application } from 'express';
+import express, { Application } from "express";
+
+import { swaggerRouter } from "./infrastructure/http/docs/swagger";
 
 const app: Application = express();
 
 app.use(express.json());
 
-app.get('/health', (_req, res) => {
+app.get("/health", (_req, res) => {
   res.status(200).json({
-    status: 'ok',
+    status: "ok",
   });
 });
+
+app.use("/api-docs", swaggerRouter);
 
 export default app;

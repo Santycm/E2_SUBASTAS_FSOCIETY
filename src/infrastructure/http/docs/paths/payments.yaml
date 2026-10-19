@@ -1,0 +1,76 @@
+
+/api/v1/payments/webhook:
+  post:
+    tags:
+      - Pagos
+    summary: Recibir notificación de Mercado Pago
+    description: |
+      Endpoint de notificaciones del proveedor. No usa autenticación JWT.
+      Valida la firma mediante x-signature y x-request-id, salvo que
+      esté habilitado el modo de reconciliación de demostración.
+      El identificador externo se recibe en el parámetro de consulta data.id.
+    parameters:
+      - name: data.id
+        in: query
+        required: true
+        description: Identificador externo de la orden de pago.
+        schema:
+          type: string
+        example: "1234567890"
+      - name: x-request-id
+        in: header
+        required: true
+        description: Identificador del evento enviado por el proveedor.
+        schema:
+          type: string
+        example: "req-123456"
+      - name: x-signature
+        in: header
+        required: false
+        description: Firma de la notificación de Mercado Pago.
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              application_id:
+                type: string
+                nullable: true
+                example: "123456789"
+          example:
+            application_id: "123456789"
+    responses:
+      "200":
+        description: Notificación recibida y procesada o no aplicable al estado actual.
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - received
+              properties:
+                received:
+                  type: boolean
+                  example: true
+      "400":
+        description: Falta data.id o x-request-id.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookErrorResponse"
+      "401":
+        description: Firma inválida o no validada fuera del modo de demostración.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookErrorResponse"
+      "500":
+        description: Error al validar la firma o procesar la notificación.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookErrorResponse"

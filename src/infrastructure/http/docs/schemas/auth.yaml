@@ -1,0 +1,76 @@
+
+RegisterUserRequest:
+  type: object
+  required:
+    - name
+    - email
+    - password
+  properties:
+    name:
+      type: string
+      minLength: 2
+      maxLength: 100
+      example: "Santiago Castaño"
+    email:
+      type: string
+      format: email
+      maxLength: 254
+      example: "usuario@example.com"
+    password:
+      type: string
+      minLength: 8
+      format: password
+      example: "ClaveSegura123"
+
+LoginRequest:
+  type: object
+  required:
+    - email
+    - password
+  properties:
+    email:
+      type: string
+      format: email
+      example: "usuario@example.com"
+    password:
+      type: string
+      format: password
+      example: "ClaveSegura123"
+
+AuthResponse:
+  type: object
+  required:
+    - id
+    - name
+    - email
+    - token
+  properties:
+    id:
+      type: string
+      example: "507f1f77bcf86cd799439013"
+    name:
+      type: string
+      example: "Santiago Castaño"
+    email:
+      type: string
+      format: email
+      example: "usuario@example.com"
+    token:
+      type: string
+      description: Token JWT para las operaciones protegidas.
+      example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+RegisteredUser:
+  type: object
+  required:
+    - id
+    - name
+    - email
+  properties:
+    id:
+      type: string
+    name:
+      type: string
+    email:
+      type: string
+      format: email

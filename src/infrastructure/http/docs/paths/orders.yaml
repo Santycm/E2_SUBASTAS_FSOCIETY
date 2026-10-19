@@ -1,0 +1,141 @@
+
+/api/v1/orders:
+  get:
+    tags:
+      - Órdenes
+    summary: Listar órdenes del comprador autenticado
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 10
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum: [PENDING, PAID, EXPIRED]
+    responses:
+      "200":
+        description: Órdenes del comprador con paginación.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderList"
+      "400":
+        description: Parámetros inválidos.
+      "401":
+        description: Token ausente o inválido.
+
+/api/v1/orders/sales:
+  get:
+    tags:
+      - Órdenes
+    summary: Listar órdenes de las subastas del vendedor autenticado
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 10
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum: [PENDING, PAID, EXPIRED]
+    responses:
+      "200":
+        description: Órdenes de las subastas del vendedor con paginación.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderList"
+      "400":
+        description: Parámetros inválidos.
+      "401":
+        description: Token ausente o inválido.
+
+/api/v1/orders/{id}:
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: "^[0-9a-fA-F]{24}$"
+  get:
+    tags:
+      - Órdenes
+    summary: Consultar una orden
+    description: El comprador propietario de la orden o el vendedor de la subasta pueden consultarla.
+    security:
+      - bearerAuth: []
+    responses:
+      "200":
+        description: Orden encontrada.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Order"
+      "400":
+        description: Identificador inválido.
+      "401":
+        description: Token ausente o inválido.
+      "404":
+        description: Orden inexistente o no accesible por el usuario.
+
+/api/v1/orders/{id}/payment:
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Identificador de la orden.
+      schema:
+        type: string
+        pattern: "^[0-9a-fA-F]{24}$"
+  post:
+    tags:
+      - Órdenes
+    summary: Crear una sesión de pago
+    description: Genera el checkout de Mercado Pago para una orden pendiente del comprador autenticado. No requiere cuerpo JSON.
+    security:
+      - bearerAuth: []
+    responses:
+      "201":
+        description: Sesión de pago creada.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentCheckout"
+      "400":
+        description: Identificador inválido.
+      "401":
+        description: Token ausente o inválido.
+      "404":
+        description: Orden no encontrada, no pertenece al comprador o la subasta no existe.
+      "409":
+        description: La orden expiró, no está pendiente o ya existe un pago pendiente o aprobado.
+      "500":
+        description: Error interno o fallo del proveedor de pagos.
+      "503":
+        description: Servicio de pagos no disponible, si la infraestructura traduce el error a este estado.

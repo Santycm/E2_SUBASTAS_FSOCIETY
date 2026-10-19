@@ -1,0 +1,20 @@
+
+/health:
+  get:
+    tags:
+      - Health
+    summary: Comprobar estado de la API
+    description: Comprueba que el proceso de la aplicación responde.
+    responses:
+      "200":
+        description: Aplicación disponible.
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  example: "ok"

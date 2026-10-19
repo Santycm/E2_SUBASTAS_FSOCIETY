@@ -1,0 +1,42 @@
+
+/api/v1/users/me:
+  get:
+    tags:
+      - Usuarios
+    summary: Consultar perfil del usuario autenticado
+    description: Incluye las subastas publicadas y las subastas en las que ha participado.
+    security:
+      - bearerAuth: []
+    responses:
+      "200":
+        description: Perfil del usuario.
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - name
+                - email
+                - publishedAuctions
+                - participatedAuctions
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                publishedAuctions:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Auction"
+                participatedAuctions:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Auction"
+      "401":
+        description: Token ausente o inválido.
+      "404":
+        description: Usuario no encontrado.

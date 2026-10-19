@@ -1,0 +1,53 @@
+
+openapi: 3.0.3
+
+info:
+  title: Plataforma de Subastas en Línea API
+  version: 1.0.0
+  description: API REST para registro de usuarios, publicación de subastas, ofertas y pagos.
+
+servers:
+  - url: /
+    description: Servidor actual
+
+tags:
+  - name: Health
+    description: Estado de la aplicación
+  - name: Autenticación
+    description: Registro e inicio de sesión
+  - name: Categorías
+    description: Consulta y creación de categorías
+  - name: Subastas
+    description: Consulta, creación y cancelación de subastas
+  - name: Ofertas
+    description: Registro y consulta de ofertas
+  - name: Órdenes
+    description: Consulta de órdenes y creación de sesiones de pago
+  - name: Usuarios
+    description: Perfil del usuario autenticado
+  - name: Pagos
+    description: Notificaciones de Mercado Pago
+
+paths: {}
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT obtenido al iniciar sesión.
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "RESOURCE_NOT_FOUND"
+
+    WebhookErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "INVALID_SIGNATURE"
