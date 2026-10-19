@@ -31,8 +31,17 @@ const handlePaymentWebhookUseCase =
     paymentProvider,
   );
 
+const mercadoPagoWebhookSecret =
+  process.env.MERCADOPAGO_WEBHOOK_SECRET;
+
+if (!mercadoPagoWebhookSecret) {
+  throw new Error('MERCADOPAGO_WEBHOOK_SECRET_NOT_CONFIGURED');
+}
+
 const controller = new PaymentController(
   handlePaymentWebhookUseCase,
+  process.env.MERCADOPAGO_WEBHOOK_SECRET ?? '',
+  process.env.ALLOW_UNVERIFIED_WEBHOOK_RECONCILIATION === 'true',
 );
 
 router.post('/webhook', controller.webhook);
