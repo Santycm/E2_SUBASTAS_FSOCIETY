@@ -12,7 +12,7 @@ API REST para una plataforma de subastas en línea que permite gestionar usuario
 - **Mercado Pago:** integración con la pasarela de pagos.
 - **Socket.IO:** comunicación en tiempo real.
 - **Swagger UI y OpenAPI:** documentación interactiva de la API.
-- **Vitest y Supertest:** pruebas unitarias, de integración y de la API HTTP.
+- **Jest y Supertest:** pruebas unitarias, de integración y de la API HTTP.
 
 ## Requisitos previos
 
@@ -464,9 +464,9 @@ Esto permite mantener los casos de uso independientes de Socket.IO y facilita su
 
 ## Pruebas
 
-El proyecto utiliza Vitest para las pruebas y Supertest para las solicitudes HTTP.
+El proyecto utiliza **Jest** para ejecutar las pruebas automatizadas y **Supertest** para realizar solicitudes HTTP en las pruebas que lo requieren.
 
-Ejecutar las pruebas unitarias:
+Ejecutar las pruebas configuradas para el comando principal:
 
 ```bash
 npm test
@@ -476,6 +476,12 @@ Ejecutarlas en modo de observación:
 
 ```bash
 npm run test:watch
+```
+
+Ejecutar todas las pruebas configuradas en `jest.coverage.config.cjs`:
+
+```bash
+npm run test:all
 ```
 
 Generar el informe de cobertura:
@@ -492,18 +498,18 @@ npm run test:integration
 
 ### Organización de las pruebas
 
-- **`tests/unit/domain/`:** pruebas de reglas del dominio, como las reglas de subastas, ofertas y órdenes.
-- **`tests/application/`:** pruebas de casos de uso, incluyendo operaciones de subastas y ofertas.
-- **`tests/integration/http/`:** pruebas de los endpoints y del comportamiento HTTP.
-- **`tests/integration/persistence/`:** pruebas de integración de repositorios con MongoDB.
+Las pruebas se organizan según la responsabilidad de cada componente:
+
+- **`tests/unit/domain/`:** pruebas unitarias de las reglas y la lógica del dominio, como las reglas de subastas, ofertas y órdenes.
+- **`tests/application/`:** pruebas de los casos de uso y de sus interacciones con las dependencias.
+- **`tests/infrastructure/http/controllers/`:** pruebas unitarias de los controladores HTTP, incluyendo validaciones de solicitudes, respuestas y manejo de errores.
+- **`tests/integration/http/`:** pruebas de integración de los endpoints y del comportamiento HTTP.
+- **`tests/integration/persistence/`:** pruebas de integración de los repositorios con MongoDB.
 - **`tests/integration/setup.ts`:** configuración compartida para las pruebas de integración.
 
-En la ejecución de referencia del proyecto se obtuvieron los siguientes resultados:
+Las pruebas unitarias permiten verificar la lógica de los componentes de forma aislada, mientras que las pruebas de integración comprueban el comportamiento conjunto de los componentes involucrados en cada operación, incluyendo el acceso a MongoDB cuando corresponde.
 
-- **Pruebas unitarias y de aplicación:** 64 pruebas aprobadas en 7 archivos.
-- **Pruebas de integración:** 48 pruebas aprobadas en 5 archivos.
-
-Estos resultados corresponden a una ejecución concreta y pueden cambiar a medida que se agreguen o modifiquen pruebas.
+Los resultados y porcentajes de cobertura pueden variar a medida que se incorporen o modifiquen pruebas. Para consultar los resultados actualizados, se deben ejecutar los comandos correspondientes.
 
 ## Comprobación de salud
 
@@ -525,17 +531,19 @@ Este endpoint confirma la respuesta del servicio HTTP; no debe interpretarse por
 
 ## Scripts disponibles
 
-Los scripts principales configurados en el proyecto son:
+Los scripts configurados en el proyecto son:
 
-| Comando                    | Propósito                                                    |
-| -------------------------- | ------------------------------------------------------------ |
-| `npm run dev`              | Iniciar en desarrollo.                                       |
-| `npm run build`            | Compilar TypeScript.                                         |
-| `npm start`                | Ejecutar la aplicación compilada.                            |
-| `npm test`                 | Ejecutar las pruebas configuradas para el comando principal. |
-| `npm run test:watch`       | Ejecutar las pruebas en modo de observación.                 |
-| `npm run test:coverage`    | Generar el informe de cobertura.                             |
-| `npm run test:integration` | Ejecutar las pruebas de integración.                         |
+| Comando | Propósito |
+| --- | --- |
+| `npm run dev` | Iniciar la aplicación en desarrollo. |
+| `npm run build` | Compilar TypeScript. |
+| `npm start` | Ejecutar la aplicación compilada. |
+| `npm test` | Ejecutar las pruebas con la configuración principal de Jest. |
+| `npm run test:watch` | Ejecutar las pruebas en modo de observación. |
+| `npm run test:integration` | Ejecutar las pruebas con `jest.integration.config.cjs`. |
+| `npm run test:all` | Ejecutar las pruebas con `jest.coverage.config.cjs`, sin activar explícitamente la opción de cobertura. |
+| `npm run test:coverage` | Ejecutar las pruebas con `jest.coverage.config.cjs` y generar el informe de cobertura. |
+
 
 ## Consideraciones de seguridad
 
