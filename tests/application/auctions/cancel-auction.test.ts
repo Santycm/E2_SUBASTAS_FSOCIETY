@@ -1,5 +1,4 @@
-
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { Auction } from '../../../src/domain/entities/auction';
 import { AuctionRepository } from '../../../src/domain/ports/auction.repository';
 import { CancelAuctionUseCase } from '../../../src/application/use-cases/auctions/cancel-auction/cancel-auction';
@@ -20,19 +19,23 @@ describe('CancelAuctionUseCase', () => {
   };
 
   let auctionRepository: {
-    findById: ReturnType<typeof vi.fn>;
-    updateStatus: ReturnType<typeof vi.fn>;
+    findById: jest.Mock<AuctionRepository['findById']>;
+    updateStatus: jest.Mock<AuctionRepository['updateStatus']>;
   };
 
   let useCase: CancelAuctionUseCase;
 
   beforeEach(() => {
     auctionRepository = {
-      findById: vi.fn().mockResolvedValue(auction),
-      updateStatus: vi.fn().mockResolvedValue({
-        ...auction,
-        status: 'CANCELLED',
-      }),
+      findById: jest
+        .fn<AuctionRepository['findById']>()
+        .mockResolvedValue(auction),
+      updateStatus: jest
+        .fn<AuctionRepository['updateStatus']>()
+        .mockResolvedValue({
+          ...auction,
+          status: 'CANCELLED',
+        }),
     };
 
     useCase = new CancelAuctionUseCase(

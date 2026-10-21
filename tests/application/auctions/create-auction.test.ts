@@ -1,5 +1,4 @@
-
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { AuctionRepository } from '../../../src/domain/ports/auction.repository';
 import { CreateAuctionUseCase } from '../../../src/application/use-cases/auctions/create-auction/create-auction';
 
@@ -17,20 +16,22 @@ describe('CreateAuctionUseCase', () => {
   };
 
   let auctionRepository: {
-    save: ReturnType<typeof vi.fn>;
+    save: jest.Mock<AuctionRepository['save']>;
   };
 
   let useCase: CreateAuctionUseCase;
 
   beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(now);
+    jest.useFakeTimers();
+    jest.setSystemTime(now);
 
     auctionRepository = {
-      save: vi.fn().mockImplementation(async (data) => ({
-        id: 'auction-001',
-        ...data,
-      })),
+      save: jest
+        .fn<AuctionRepository['save']>()
+        .mockImplementation(async (data) => ({
+          id: 'auction-001',
+          ...data,
+        })),
     };
 
     useCase = new CreateAuctionUseCase(
@@ -39,7 +40,7 @@ describe('CreateAuctionUseCase', () => {
   });
 
   afterEach(() => {
-    vi.useRealTimers();
+    jest.useRealTimers();
   });
 
   it('creates an auction with valid data', async () => {
