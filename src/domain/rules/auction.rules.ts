@@ -21,14 +21,17 @@ export function validateAuctionCreation(
   createdAt: Date,
   closesAt: Date,
 ): AuctionCreationValidationResult {
-  if (basePrice <= 0) {
+  if (!Number.isFinite(basePrice) || basePrice <= 0) {
     return {
       valid: false,
       reason: 'INVALID_BASE_PRICE',
     };
   }
 
-  if (minimumIncrement <= 0) {
+  if (
+    !Number.isFinite(minimumIncrement) ||
+    minimumIncrement <= 0
+  ) {
     return {
       valid: false,
       reason: 'INVALID_MINIMUM_INCREMENT',
@@ -75,5 +78,5 @@ export function validateAuctionCreation(
 }
 
 export function canCancelAuction(auction: Auction): boolean {
-  return auction.currentBid === null;
+  return auction.status === 'OPEN' && auction.currentBid === null;
 }
