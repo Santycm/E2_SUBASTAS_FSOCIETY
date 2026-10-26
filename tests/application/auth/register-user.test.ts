@@ -1,24 +1,23 @@
-import { describe, expect, it, jest } from '@jest/globals';
-import { RegisterUserUseCase } from '../../../src/application/use-cases/auth/register-user/register-user';
-import { UserRepository } from '../../../src/domain/ports/user.repository';
-import { PasswordHasher } from '../../../src/domain/ports/password-hasher';
-import { ApplicationError } from '../../../src/application/errors/application-error';
+import { describe, expect, it, jest } from "@jest/globals";
+import { RegisterUserUseCase } from "../../../src/application/use-cases/auth/register-user/register-user";
+import { User } from "../../../src/domain/entities/user";
+import { UserRepository } from "../../../src/domain/ports/user.repository";
+import { PasswordHasher } from "../../../src/domain/ports/password-hasher";
 
-describe('RegisterUserUseCase', () => {
+describe("RegisterUserUseCase", () => {
   const input = {
-    name: 'Test User',
-    email: 'test@example.com',
-    password: 'plain-password',
+    name: "Test User",
+    email: "test@example.com",
+    password: "plain-password",
   };
 
   function createUseCase() {
     const userRepository = {
-      findByEmail: jest.fn(),
-      save: jest.fn(),
+      findByEmail: jest.fn<UserRepository["findByEmail"]>(),
+      save: jest.fn<UserRepository["save"]>(),
     };
-
     const passwordHasher = {
-      hash: jest.fn(),
+      hash: jest.fn<PasswordHasher["hash"]>(),
     };
 
     const useCase = new RegisterUserUseCase(
@@ -29,17 +28,19 @@ describe('RegisterUserUseCase', () => {
     return { useCase, userRepository, passwordHasher };
   }
 
-  it('throws an application error when the email already exists', async () => {
+  it("throws an application error when the email already exists", async () => {
     const { useCase, userRepository, passwordHasher } = createUseCase();
 
-    userRepository.findByEmail.mockResolvedValue({
-      id: 'existing-user',
-      ...input,
-      password: 'existing-hash',
-    } as never);
+    const existingUser: User = {
+      id: "existing-user",
+      name: input.name,
+      email: input.email,
+      password: "existing-hash",
+    };
+    userRepository.findByEmail.mockResolvedValue(existingUser);
 
     await expect(useCase.execute(input)).rejects.toMatchObject({
-      code: 'EMAIL_ALREADY_EXISTS',
+      code: "EMAIL_ALREADY_EXISTS",
       statusCode: 409,
     });
 
@@ -47,17 +48,17 @@ describe('RegisterUserUseCase', () => {
     expect(userRepository.save).not.toHaveBeenCalled();
   });
 
-  it('hashes the password, saves the user and returns public fields', async () => {
+  it("hashes the password, saves the user and returns public fields", async () => {
     const { useCase, userRepository, passwordHasher } = createUseCase();
 
-    passwordHasher.hash.mockResolvedValue('hashed-password');
+    passwordHasher.hash.mockResolvedValue("hashed-password");
     userRepository.findByEmail.mockResolvedValue(null);
     userRepository.save.mockResolvedValue({
-      id: 'user-1',
+      id: "user-1",
       name: input.name,
       email: input.email,
-      password: 'hashed-password',
-    } as never);
+      password: "hashed-password",
+    });
 
     const result = await useCase.execute(input);
 
@@ -65,13 +66,13 @@ describe('RegisterUserUseCase', () => {
     expect(userRepository.save).toHaveBeenCalledWith({
       name: input.name,
       email: input.email,
-      password: 'hashed-password',
+      password: "hashed-password",
     });
     expect(result).toEqual({
-      id: 'user-1',
+      id: "user-1",
       name: input.name,
       email: input.email,
     });
-    expect(result).not.toHaveProperty('password');
+    expect(result).not.toHaveProperty("password");
   });
 });

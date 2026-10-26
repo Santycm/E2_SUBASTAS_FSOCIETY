@@ -1,33 +1,32 @@
-import { describe, expect, it, jest } from '@jest/globals';
-import { LoginUserUseCase } from '../../../src/application/use-cases/auth/login-user/login-user';
-import { UserRepository } from '../../../src/domain/ports/user.repository';
-import { PasswordHasher } from '../../../src/domain/ports/password-hasher';
-import { TokenService } from '../../../src/domain/ports/token-service';
+import { describe, expect, it, jest } from "@jest/globals";
+import { LoginUserUseCase } from "../../../src/application/use-cases/auth/login-user/login-user";
+import { User } from "../../../src/domain/entities/user";
+import { UserRepository } from "../../../src/domain/ports/user.repository";
+import { PasswordHasher } from "../../../src/domain/ports/password-hasher";
+import { TokenService } from "../../../src/domain/ports/token-service";
 
-describe('LoginUserUseCase', () => {
+describe("LoginUserUseCase", () => {
   const input = {
-    email: 'test@example.com',
-    password: 'plain-password',
+    email: "test@example.com",
+    password: "plain-password",
   };
 
-  const user = {
-    id: 'user-1',
-    name: 'Test User',
+  const user: User = {
+    id: "user-1",
+    name: "Test User",
     email: input.email,
-    password: 'hashed-password',
+    password: "hashed-password",
   };
 
   function createUseCase() {
     const userRepository = {
-      findByEmail: jest.fn(),
+      findByEmail: jest.fn<UserRepository["findByEmail"]>(),
     };
-
     const passwordHasher = {
-      compare: jest.fn(),
+      compare: jest.fn<PasswordHasher["compare"]>(),
     };
-
     const tokenService = {
-      generate: jest.fn(),
+      generate: jest.fn<TokenService["generate"]>(),
     };
 
     const useCase = new LoginUserUseCase(
@@ -39,7 +38,7 @@ describe('LoginUserUseCase', () => {
     return { useCase, userRepository, passwordHasher, tokenService };
   }
 
-  it('returns null when the email is not registered', async () => {
+  it("returns null when the email is not registered", async () => {
     const { useCase, userRepository, passwordHasher, tokenService } =
       createUseCase();
 
@@ -53,11 +52,11 @@ describe('LoginUserUseCase', () => {
     expect(tokenService.generate).not.toHaveBeenCalled();
   });
 
-  it('returns null when the password is incorrect', async () => {
+  it("returns null when the password is incorrect", async () => {
     const { useCase, userRepository, passwordHasher, tokenService } =
       createUseCase();
 
-    userRepository.findByEmail.mockResolvedValue(user as never);
+    userRepository.findByEmail.mockResolvedValue(user);
     passwordHasher.compare.mockResolvedValue(false);
 
     const result = await useCase.execute(input);
@@ -70,13 +69,13 @@ describe('LoginUserUseCase', () => {
     expect(tokenService.generate).not.toHaveBeenCalled();
   });
 
-  it('returns the user profile and token when credentials are valid', async () => {
+  it("returns the user profile and token when credentials are valid", async () => {
     const { useCase, userRepository, passwordHasher, tokenService } =
       createUseCase();
 
-    userRepository.findByEmail.mockResolvedValue(user as never);
+    userRepository.findByEmail.mockResolvedValue(user);
     passwordHasher.compare.mockResolvedValue(true);
-    tokenService.generate.mockReturnValue('jwt-token');
+    tokenService.generate.mockReturnValue("jwt-token");
 
     const result = await useCase.execute(input);
 
@@ -87,7 +86,7 @@ describe('LoginUserUseCase', () => {
       id: user.id,
       name: user.name,
       email: user.email,
-      token: 'jwt-token',
+      token: "jwt-token",
     });
   });
 });
