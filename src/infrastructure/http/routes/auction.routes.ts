@@ -14,6 +14,7 @@ import { GetAuctionBidsUseCase } from "../../../application/use-cases/bids/get-a
 import { MongooseAuctionRepository } from "../../persistence/mongoose/repositories/mongoose-auction.repository";
 import { MongooseBidRepository } from "../../persistence/mongoose/repositories/mongoose-bid.repository";
 import { MongooseOrderRepository } from "../../persistence/mongoose/repositories/mongoose-order.repository";
+import { MongooseCategoryRepository } from "../../persistence/mongoose/repositories/mongoose-category.repository";
 
 import { AuctionEventPublisher } from "../../../domain/ports/auction-event.publisher";
 
@@ -36,6 +37,7 @@ const createAuctionRoutes = (
   const router: Router = Router();
 
   const auctionRepository = new MongooseAuctionRepository();
+  const categoryRepository = new MongooseCategoryRepository();
   const bidRepository = new MongooseBidRepository();
   const orderRepository = new MongooseOrderRepository();
 
@@ -46,7 +48,10 @@ const createAuctionRoutes = (
     auctionEventPublisher,
   );
 
-  const createAuctionUseCase = new CreateAuctionUseCase(auctionRepository);
+  const createAuctionUseCase = new CreateAuctionUseCase(
+    auctionRepository,
+    categoryRepository,
+  );
 
   const getAuctionByIdUseCase = new GetAuctionByIdUseCase(
     auctionRepository,

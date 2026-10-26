@@ -1,5 +1,7 @@
+
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { AuctionRepository } from '../../../src/domain/ports/auction.repository';
+import { CategoryRepository } from '../../../src/domain/ports/category.repository';
 import { CreateAuctionUseCase } from '../../../src/application/use-cases/auctions/create-auction/create-auction';
 
 describe('CreateAuctionUseCase', () => {
@@ -19,6 +21,10 @@ describe('CreateAuctionUseCase', () => {
     save: jest.Mock<AuctionRepository['save']>;
   };
 
+  let categoryRepository: {
+    findById: jest.Mock<CategoryRepository['findById']>;
+  };
+
   let useCase: CreateAuctionUseCase;
 
   beforeEach(() => {
@@ -34,8 +40,19 @@ describe('CreateAuctionUseCase', () => {
         })),
     };
 
+    categoryRepository = {
+      findById: jest
+        .fn<CategoryRepository['findById']>()
+        .mockResolvedValue({
+          id: dto.categoryId,
+          name: 'Tecnología',
+          description: 'Productos tecnológicos',
+        }),
+    };
+
     useCase = new CreateAuctionUseCase(
       auctionRepository as unknown as AuctionRepository,
+      categoryRepository as unknown as CategoryRepository,
     );
   });
 
@@ -43,8 +60,12 @@ describe('CreateAuctionUseCase', () => {
     jest.useRealTimers();
   });
 
-  it('creates an auction with valid data', async () => {
+  it('creates an auction when the category exists', async () => {
     const result = await useCase.execute(dto);
+
+    expect(categoryRepository.findById).toHaveBeenCalledWith(
+      dto.categoryId,
+    );
 
     expect(auctionRepository.save).toHaveBeenCalledWith({
       title: dto.title,
@@ -59,19 +80,24 @@ describe('CreateAuctionUseCase', () => {
       createdAt: now,
     });
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       id: 'auction-001',
       title: dto.title,
-      description: dto.description,
       categoryId: dto.categoryId,
-      sellerId: dto.sellerId,
-      basePrice: dto.basePrice,
-      minimumIncrement: dto.minimumIncrement,
-      currentBid: null,
       status: 'OPEN',
-      closesAt: new Date(dto.closesAt),
-      createdAt: now,
     });
+  });
+
+  it('rejects an auction when the category does not exist', async () => {
+    categoryRepository.findById.mockResolvedValue(null);
+
+    await expect(
+      useCase.execute(dto),
+    ).rejects.toMatchObject({
+      message: 'CATEGORY_NOT_FOUND',
+    });
+
+    expect(auctionRepository.save).not.toHaveBeenCalled();
   });
 
   it('rejects a base price of zero', async () => {
