@@ -1,5 +1,4 @@
-
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { Auction } from '../../../src/domain/entities/auction';
 import { Bid } from '../../../src/domain/entities/bid';
 import { AuctionRepository } from '../../../src/domain/ports/auction.repository';
@@ -36,53 +35,53 @@ describe('CreateBidUseCase', () => {
   };
 
   let auctionRepository: {
-    findById: ReturnType<typeof vi.fn>;
-    updateStatus: ReturnType<typeof vi.fn>;
-    updateCurrentBid: ReturnType<typeof vi.fn>;
+    findById: ReturnType<typeof jest.fn>;
+    updateStatus: ReturnType<typeof jest.fn>;
+    updateCurrentBid: ReturnType<typeof jest.fn>;
   };
 
   let bidRepository: {
-    save: ReturnType<typeof vi.fn>;
-    findHighestAcceptedByAuctionId: ReturnType<typeof vi.fn>;
+    save: ReturnType<typeof jest.fn>;
+    findHighestAcceptedByAuctionId: ReturnType<typeof jest.fn>;
   };
 
   let orderRepository: {
-    findByAuctionId: ReturnType<typeof vi.fn>;
-    save: ReturnType<typeof vi.fn>;
+    findByAuctionId: ReturnType<typeof jest.fn>;
+    save: ReturnType<typeof jest.fn>;
   };
 
   let auctionEventPublisher: {
-    publishBidPlaced: ReturnType<typeof vi.fn>;
-    publishBidOutbid: ReturnType<typeof vi.fn>;
-    publishAuctionClosed: ReturnType<typeof vi.fn>;
+    publishBidPlaced: ReturnType<typeof jest.fn>;
+    publishBidOutbid: ReturnType<typeof jest.fn>;
+    publishAuctionClosed: ReturnType<typeof jest.fn>;
   };
 
   let useCase: CreateBidUseCase;
 
   beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(now);
+    jest.useFakeTimers();
+    jest.setSystemTime(now);
 
     auctionRepository = {
-      findById: vi.fn(),
-      updateStatus: vi.fn(),
-      updateCurrentBid: vi.fn(),
+      findById: jest.fn(),
+      updateStatus: jest.fn(),
+      updateCurrentBid: jest.fn(),
     };
 
     bidRepository = {
-      save: vi.fn(),
-      findHighestAcceptedByAuctionId: vi.fn(),
+      save: jest.fn(),
+      findHighestAcceptedByAuctionId: jest.fn(),
     };
 
     orderRepository = {
-      findByAuctionId: vi.fn(),
-      save: vi.fn(),
+      findByAuctionId: jest.fn(),
+      save: jest.fn(),
     };
 
     auctionEventPublisher = {
-      publishBidPlaced: vi.fn(),
-      publishBidOutbid: vi.fn(),
-      publishAuctionClosed: vi.fn(),
+      publishBidPlaced: jest.fn(),
+      publishBidOutbid: jest.fn(),
+      publishAuctionClosed: jest.fn(),
     };
 
     useCase = new CreateBidUseCase(
@@ -118,7 +117,7 @@ describe('CreateBidUseCase', () => {
   });
 
   afterEach(() => {
-    vi.useRealTimers();
+    jest.useRealTimers();
   });
 
   it('returns null when the auction does not exist', async () => {

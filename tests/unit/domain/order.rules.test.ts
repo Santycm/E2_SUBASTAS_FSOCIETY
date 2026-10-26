@@ -1,5 +1,4 @@
-
-import { describe, expect, it, vi, afterEach } from 'vitest';
+import { describe, expect, it, jest, afterEach } from '@jest/globals';
 import {
   calculateOrderExpiration,
   isOrderExpired,
@@ -27,7 +26,7 @@ describe('calculateOrderExpiration', () => {
 
 describe('isOrderExpired', () => {
   afterEach(() => {
-    vi.useRealTimers();
+    jest.useRealTimers();
   });
 
   it('returns true when expiration is before the current time', () => {
@@ -55,8 +54,8 @@ describe('isOrderExpired', () => {
   });
 
   it('uses the current time when now is omitted', () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-11-01T12:00:00.000Z'));
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-11-01T12:00:00.000Z'));
 
     expect(
       isOrderExpired(new Date('2026-11-01T11:00:00.000Z')),

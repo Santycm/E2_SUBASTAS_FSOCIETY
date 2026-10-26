@@ -1,78 +1,90 @@
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
+import { Auction } from "../../../src/domain/entities/auction";
+import { Bid } from "../../../src/domain/entities/bid";
+import { AuctionRepository } from "../../../src/domain/ports/auction.repository";
+import { AuctionEventPublisher } from "../../../src/domain/ports/auction-event.publisher";
+import { BidRepository } from "../../../src/domain/ports/bid.repository";
+import { OrderRepository } from "../../../src/domain/ports/order.repository";
+import { CloseAuctionUseCase } from "../../../src/application/use-cases/auctions/close-auction/close-auction";
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Auction } from '../../../src/domain/entities/auction';
-import { Bid } from '../../../src/domain/entities/bid';
-import { AuctionRepository } from '../../../src/domain/ports/auction.repository';
-import { AuctionEventPublisher } from '../../../src/domain/ports/auction-event.publisher';
-import { BidRepository } from '../../../src/domain/ports/bid.repository';
-import { OrderRepository } from '../../../src/domain/ports/order.repository';
-import { CloseAuctionUseCase } from '../../../src/application/use-cases/auctions/close-auction/close-auction';
-
-describe('CloseAuctionUseCase', () => {
-  const now = new Date('2026-11-01T12:00:00.000Z');
+describe("CloseAuctionUseCase", () => {
+  const now = new Date("2026-11-01T12:00:00.000Z");
 
   const auction: Auction = {
-    id: 'auction-001',
-    title: 'Laptop',
-    description: 'Laptop usada',
-    categoryId: 'category-001',
-    sellerId: 'seller-001',
+    id: "auction-001",
+    title: "Laptop",
+    description: "Laptop usada",
+    categoryId: "category-001",
+    sellerId: "seller-001",
     basePrice: 100000,
     minimumIncrement: 10000,
     currentBid: 160000,
-    status: 'OPEN',
-    closesAt: new Date('2026-11-01T11:00:00.000Z'),
-    createdAt: new Date('2026-10-01T12:00:00.000Z'),
+    status: "OPEN",
+    closesAt: new Date("2026-11-01T11:00:00.000Z"),
+    createdAt: new Date("2026-10-01T12:00:00.000Z"),
   };
 
   const highestBid: Bid = {
-    id: 'bid-001',
+    id: "bid-001",
     auctionId: auction.id,
-    bidderId: 'buyer-001',
+    bidderId: "buyer-001",
     amount: 160000,
-    status: 'ACCEPTED',
+    status: "ACCEPTED",
     rejectionReason: null,
-    createdAt: new Date('2026-11-01T10:30:00.000Z'),
+    createdAt: new Date("2026-11-01T10:30:00.000Z"),
   };
 
   let auctionRepository: {
-    updateStatus: ReturnType<typeof vi.fn>;
+    updateStatus: jest.Mock<AuctionRepository["updateStatus"]>;
   };
 
   let bidRepository: {
-    findHighestAcceptedByAuctionId: ReturnType<typeof vi.fn>;
+    findHighestAcceptedByAuctionId: jest.Mock<
+      BidRepository["findHighestAcceptedByAuctionId"]
+    >;
   };
 
   let orderRepository: {
-    findByAuctionId: ReturnType<typeof vi.fn>;
-    save: ReturnType<typeof vi.fn>;
+    findByAuctionId: jest.Mock<OrderRepository["findByAuctionId"]>;
+    save: jest.Mock<OrderRepository["save"]>;
   };
 
   let auctionEventPublisher: {
-    publishAuctionClosed: ReturnType<typeof vi.fn>;
+    publishAuctionClosed: jest.Mock<
+      AuctionEventPublisher["publishAuctionClosed"]
+    >;
   };
 
   let useCase: CloseAuctionUseCase;
 
   beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(now);
+    jest.useFakeTimers();
+    jest.setSystemTime(now);
 
     auctionRepository = {
-      updateStatus: vi.fn(),
+      updateStatus: jest.fn<AuctionRepository["updateStatus"]>(),
     };
 
     bidRepository = {
-      findHighestAcceptedByAuctionId: vi.fn(),
+      findHighestAcceptedByAuctionId:
+        jest.fn<BidRepository["findHighestAcceptedByAuctionId"]>(),
     };
 
     orderRepository = {
-      findByAuctionId: vi.fn(),
-      save: vi.fn(),
+      findByAuctionId: jest.fn<OrderRepository["findByAuctionId"]>(),
+      save: jest.fn<OrderRepository["save"]>(),
     };
 
     auctionEventPublisher = {
-      publishAuctionClosed: vi.fn(),
+      publishAuctionClosed:
+        jest.fn<AuctionEventPublisher["publishAuctionClosed"]>(),
     };
 
     useCase = new CloseAuctionUseCase(
@@ -83,17 +95,25 @@ describe('CloseAuctionUseCase', () => {
     );
 
     orderRepository.findByAuctionId.mockResolvedValue(null);
-    orderRepository.save.mockResolvedValue(undefined);
+    orderRepository.save.mockResolvedValue({
+      id: "order-001",
+      auctionId: auction.id,
+      buyerId: highestBid.bidderId,
+      amount: highestBid.amount,
+      status: "PENDING",
+      createdAt: now,
+      expiresAt: new Date("2026-11-03T12:00:00.000Z"),
+    });
   });
 
   afterEach(() => {
-    vi.useRealTimers();
+    jest.useRealTimers();
   });
 
-  it('does not close an auction that has not expired', async () => {
+  it("does not close an auction that has not expired", async () => {
     const openAuction: Auction = {
       ...auction,
-      closesAt: new Date('2026-11-01T12:01:00.000Z'),
+      closesAt: new Date("2026-11-01T12:01:00.000Z"),
     };
 
     const result = await useCase.execute(openAuction);
@@ -105,10 +125,10 @@ describe('CloseAuctionUseCase', () => {
     expect(auctionEventPublisher.publishAuctionClosed).not.toHaveBeenCalled();
   });
 
-  it('does not process an auction that is already closed', async () => {
+  it("does not process an auction that is already closed", async () => {
     const closedAuction: Auction = {
       ...auction,
-      status: 'CLOSED',
+      status: "CLOSED",
     };
 
     const result = await useCase.execute(closedAuction);
@@ -120,7 +140,7 @@ describe('CloseAuctionUseCase', () => {
     expect(auctionEventPublisher.publishAuctionClosed).not.toHaveBeenCalled();
   });
 
-  it('marks an expired auction without accepted bids as NO_BIDS', async () => {
+  it("marks an expired auction without accepted bids as NO_BIDS", async () => {
     bidRepository.findHighestAcceptedByAuctionId.mockResolvedValue(null);
 
     const noBidsAuction: Auction = {
@@ -130,43 +150,43 @@ describe('CloseAuctionUseCase', () => {
 
     auctionRepository.updateStatus.mockResolvedValue({
       ...noBidsAuction,
-      status: 'NO_BIDS',
+      status: "NO_BIDS",
     });
 
     const result = await useCase.execute(noBidsAuction);
 
-    expect(
-      bidRepository.findHighestAcceptedByAuctionId,
-    ).toHaveBeenCalledWith(noBidsAuction.id);
+    expect(bidRepository.findHighestAcceptedByAuctionId).toHaveBeenCalledWith(
+      noBidsAuction.id,
+    );
 
     expect(auctionRepository.updateStatus).toHaveBeenCalledWith(
       noBidsAuction.id,
-      'NO_BIDS',
+      "NO_BIDS",
     );
 
-    expect(result.status).toBe('NO_BIDS');
+    expect(result.status).toBe("NO_BIDS");
     expect(orderRepository.findByAuctionId).not.toHaveBeenCalled();
     expect(orderRepository.save).not.toHaveBeenCalled();
 
     expect(auctionEventPublisher.publishAuctionClosed).toHaveBeenCalledWith({
       auctionId: noBidsAuction.id,
-      status: 'NO_BIDS',
+      status: "NO_BIDS",
     });
   });
 
-  it('closes an expired auction and creates a payment order for the highest bidder', async () => {
+  it("closes an expired auction and creates a payment order for the highest bidder", async () => {
     bidRepository.findHighestAcceptedByAuctionId.mockResolvedValue(highestBid);
 
     auctionRepository.updateStatus.mockResolvedValue({
       ...auction,
-      status: 'CLOSED',
+      status: "CLOSED",
     });
 
     const result = await useCase.execute(auction);
 
     expect(auctionRepository.updateStatus).toHaveBeenCalledWith(
       auction.id,
-      'CLOSED',
+      "CLOSED",
     );
 
     expect(orderRepository.findByAuctionId).toHaveBeenCalledWith(auction.id);
@@ -175,36 +195,42 @@ describe('CloseAuctionUseCase', () => {
       auctionId: auction.id,
       buyerId: highestBid.bidderId,
       amount: highestBid.amount,
-      status: 'PENDING',
+      status: "PENDING",
       createdAt: now,
-      expiresAt: new Date('2026-11-03T12:00:00.000Z'),
+      expiresAt: new Date("2026-11-03T12:00:00.000Z"),
     });
 
-    expect(result.status).toBe('CLOSED');
+    expect(result.status).toBe("CLOSED");
 
     expect(auctionEventPublisher.publishAuctionClosed).toHaveBeenCalledWith({
       auctionId: auction.id,
-      status: 'CLOSED',
+      status: "CLOSED",
       winnerId: highestBid.bidderId,
     });
   });
 
-  it('does not create another payment order when one already exists', async () => {
+  it("does not create another payment order when one already exists", async () => {
     bidRepository.findHighestAcceptedByAuctionId.mockResolvedValue(highestBid);
 
     auctionRepository.updateStatus.mockResolvedValue({
       ...auction,
-      status: 'CLOSED',
+      status: "CLOSED",
     });
 
     orderRepository.findByAuctionId.mockResolvedValue({
-      id: 'order-existing',
+      id: "order-existing",
+      auctionId: auction.id,
+      buyerId: highestBid.bidderId,
+      amount: highestBid.amount,
+      status: "PENDING",
+      createdAt: now,
+      expiresAt: new Date("2026-11-03T12:00:00.000Z"),
     });
 
     const result = await useCase.execute(auction);
 
     expect(orderRepository.findByAuctionId).toHaveBeenCalledWith(auction.id);
     expect(orderRepository.save).not.toHaveBeenCalled();
-    expect(result.status).toBe('CLOSED');
+    expect(result.status).toBe("CLOSED");
   });
 });

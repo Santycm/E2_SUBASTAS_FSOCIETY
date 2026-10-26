@@ -6,7 +6,7 @@ import {
   describe,
   expect,
   it,
-} from 'vitest';
+} from '@jest/globals';
 
 import { ApplicationError } from '../../../src/application/errors/application-error';
 import { connectMongoDB } from '../../../src/infrastructure/persistence/mongoose/connection';

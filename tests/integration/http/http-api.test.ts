@@ -5,7 +5,7 @@ import {
   describe,
   expect,
   it,
-} from 'vitest';
+} from '@jest/globals';
 
 import app from '../../../src/app';
 import type { AuctionEventPublisher } from '../../../src/domain/ports/auction-event.publisher';

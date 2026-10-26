@@ -1,38 +1,41 @@
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { Auction } from "../../../src/domain/entities/auction";
+import { AuctionRepository } from "../../../src/domain/ports/auction.repository";
+import { CancelAuctionUseCase } from "../../../src/application/use-cases/auctions/cancel-auction/cancel-auction";
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Auction } from '../../../src/domain/entities/auction';
-import { AuctionRepository } from '../../../src/domain/ports/auction.repository';
-import { CancelAuctionUseCase } from '../../../src/application/use-cases/auctions/cancel-auction/cancel-auction';
-
-describe('CancelAuctionUseCase', () => {
+describe("CancelAuctionUseCase", () => {
   const auction: Auction = {
-    id: 'auction-001',
-    title: 'Laptop',
-    description: 'Laptop usada',
-    categoryId: 'category-001',
-    sellerId: 'seller-001',
+    id: "auction-001",
+    title: "Laptop",
+    description: "Laptop usada",
+    categoryId: "category-001",
+    sellerId: "seller-001",
     basePrice: 100000,
     minimumIncrement: 10000,
     currentBid: null,
-    status: 'OPEN',
-    closesAt: new Date('2026-11-01T14:00:00.000Z'),
-    createdAt: new Date('2026-11-01T12:00:00.000Z'),
+    status: "OPEN",
+    closesAt: new Date("2026-11-01T14:00:00.000Z"),
+    createdAt: new Date("2026-11-01T12:00:00.000Z"),
   };
 
   let auctionRepository: {
-    findById: ReturnType<typeof vi.fn>;
-    updateStatus: ReturnType<typeof vi.fn>;
+    findById: jest.Mock<AuctionRepository["findById"]>;
+    updateStatus: jest.Mock<AuctionRepository["updateStatus"]>;
   };
 
   let useCase: CancelAuctionUseCase;
 
   beforeEach(() => {
     auctionRepository = {
-      findById: vi.fn().mockResolvedValue(auction),
-      updateStatus: vi.fn().mockResolvedValue({
-        ...auction,
-        status: 'CANCELLED',
-      }),
+      findById: jest
+        .fn<AuctionRepository["findById"]>()
+        .mockResolvedValue(auction),
+      updateStatus: jest
+        .fn<AuctionRepository["updateStatus"]>()
+        .mockResolvedValue({
+          ...auction,
+          status: "CANCELLED",
+        }),
     };
 
     useCase = new CancelAuctionUseCase(
@@ -40,26 +43,26 @@ describe('CancelAuctionUseCase', () => {
     );
   });
 
-  it('returns null when the auction does not exist', async () => {
+  it("returns null when the auction does not exist", async () => {
     auctionRepository.findById.mockResolvedValue(null);
 
-    const result = await useCase.execute('missing-auction', 'seller-001');
+    const result = await useCase.execute("missing-auction", "seller-001");
 
     expect(result).toBeNull();
     expect(auctionRepository.updateStatus).not.toHaveBeenCalled();
   });
 
-  it('rejects cancellation by a user who is not the seller', async () => {
+  it("rejects cancellation by a user who is not the seller", async () => {
     await expect(
-      useCase.execute(auction.id, 'another-user'),
+      useCase.execute(auction.id, "another-user"),
     ).rejects.toMatchObject({
-      message: 'AUCTION_NOT_OWNER',
+      message: "AUCTION_NOT_OWNER",
     });
 
     expect(auctionRepository.updateStatus).not.toHaveBeenCalled();
   });
 
-  it('rejects cancellation when the auction has bids', async () => {
+  it("rejects cancellation when the auction has bids", async () => {
     auctionRepository.findById.mockResolvedValue({
       ...auction,
       currentBid: 150000,
@@ -68,20 +71,39 @@ describe('CancelAuctionUseCase', () => {
     await expect(
       useCase.execute(auction.id, auction.sellerId),
     ).rejects.toMatchObject({
-      message: 'AUCTION_HAS_BIDS',
+      message: "AUCTION_HAS_BIDS",
     });
 
     expect(auctionRepository.updateStatus).not.toHaveBeenCalled();
   });
 
-  it('cancels an auction without bids when requested by its seller', async () => {
+  it("cancels an auction without bids when requested by its seller", async () => {
     const result = await useCase.execute(auction.id, auction.sellerId);
 
     expect(auctionRepository.findById).toHaveBeenCalledWith(auction.id);
     expect(auctionRepository.updateStatus).toHaveBeenCalledWith(
       auction.id,
-      'CANCELLED',
+      "CANCELLED",
     );
-    expect(result?.status).toBe('CANCELLED');
+    expect(result?.status).toBe("CANCELLED");
   });
+
+  it.each(["CLOSED", "CANCELLED", "NO_BIDS"] as const)(
+    "rejects cancellation when auction status is %s",
+    async (status) => {
+      auctionRepository.findById.mockResolvedValue({
+        ...auction,
+        status,
+      });
+
+      await expect(
+        useCase.execute(auction.id, auction.sellerId),
+      ).rejects.toMatchObject({
+        message: "AUCTION_NOT_OPEN",
+        statusCode: 409,
+      });
+
+      expect(auctionRepository.updateStatus).not.toHaveBeenCalled();
+    },
+  );
 });
