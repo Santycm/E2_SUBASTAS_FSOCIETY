@@ -2,6 +2,22 @@
 
 API REST para una plataforma de subastas en línea que permite gestionar usuarios, categorías, subastas, ofertas, órdenes y pagos. Integra Mercado Pago para procesar pagos y utiliza Socket.IO para la comunicación en tiempo real de eventos relacionados con las subastas.
 
+## Nombre de la materia
+
+ELECTIVA II - DESARROLLO
+
+## Nombre del proyecto
+
+Plataforma de Subastas en Línea
+
+## Equipo
+
+FSOCIETY
+
+## Integrantes
+
+* Santiago Castaño Moreno
+
 ## Tecnologías
 
 - **Node.js y TypeScript:** entorno de ejecución y lenguaje de desarrollo.
